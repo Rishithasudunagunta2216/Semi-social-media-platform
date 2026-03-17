@@ -1,0 +1,89 @@
+/* Admin Specific Styles */
+
+.adminPage {
+    animation: fadeIn 0.4s ease-out;
+}
+
+.moderationCard {
+    border-left: 4px solid var(--accent-rose);
+}
+
+.scoreBadge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.scoreHigh {
+    background: rgba(244, 63, 94, 0.2);
+    color: var(--accent-rose);
+}
+
+.scoreMid {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--accent-amber);
+}
+
+.scoreLow {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--accent-emerald);
+}
+
+.adminSidebar {
+    border-right: 1px solid rgba(244, 63, 94, 0.2) !important;
+}
+
+.controlItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.actionGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* User table styles */
+.userTableContainer {
+    overflow-x: auto;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+}
+
+.statusIndicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.statusOnline {
+    background: var(--accent-emerald);
+    box-shadow: 0 0 8px var(--accent-emerald);
+}
+
+.statusOffline {
+    background: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+    .actionGrid {
+        grid-template-columns: 1fr;
+    }
+}
