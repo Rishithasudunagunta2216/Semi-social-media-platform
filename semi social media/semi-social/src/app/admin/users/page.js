@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import styles from './admin.module.css';
+import { UvPanel, UvBadge, UvTag, UvButton, UvInput } from '@/components/UvComponents';
 
 export default function UserControlPage() {
     const { authFetch } = useAuth();
@@ -22,7 +22,10 @@ export default function UserControlPage() {
     }, [authFetch, searchTerm]);
 
     useEffect(() => {
-        fetchUsers();
+        const delaySearch = setTimeout(() => {
+            fetchUsers();
+        }, 300);
+        return () => clearTimeout(delaySearch);
     }, [fetchUsers]);
 
     const toggleBlock = async (id, currentStatus) => {
@@ -36,81 +39,72 @@ export default function UserControlPage() {
     };
 
     return (
-        <div className="animate-fadeIn">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold mb-2">User Management</h1>
-                    <p className="text-muted">Monitor student activity and restrict access to community rule-breakers.</p>
-                </div>
-            </div>
-
-            <div className="card card-glass mb-8">
-                <div className="search-container">
-                    <span className="search-icon">🔍</span>
-                    <input
-                        className="input-field"
-                        placeholder="Search students by name, email, or registration number..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-            </div>
-
-            <div className="userTableContainer">
-                <table className="data-table">
-                    <thead>
-                        <tr>
-                            <th>Student Details</th>
-                            <th>Reg. Number</th>
-                            <th>Status</th>
-                            <th>Joined Date</th>
-                            <th className="text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                            [1, 2, 3, 4, 5].map(i => (
-                                <tr key={i}><td colSpan="5" className="h-16 skeleton"></td></tr>
-                            ))
-                        ) : users.length === 0 ? (
-                            <tr><td colSpan="5" className="text-center py-10 text-muted">No students found.</td></tr>
-                        ) : (
-                            users.map((user) => (
+        <div className="uv-page">
+            <UvPanel 
+                title="Student Registry" 
+                headerActions={
+                    <div style={{ width: '300px' }}>
+                        <UvInput 
+                            placeholder="SEARCH BY NAME/UID..." 
+                            value={searchTerm} 
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                }
+            >
+                {loading && users.length === 0 ? (
+                    <div className="uv-mono-sm" style={{ padding: '40px 0' }}>RETRIVING REGISTRY...</div>
+                ) : users.length === 0 ? (
+                    <div style={{ padding: '60px', textAlign: 'center' }}>
+                        <div className="uv-mono-xs" style={{ color: 'var(--uv-muted)' }}>NO MATCHES FOUND FOR "{searchTerm.toUpperCase()}"</div>
+                    </div>
+                ) : (
+                    <table className="uv-table">
+                        <thead>
+                            <tr>
+                                <th>Student Identification</th>
+                                <th>UID / Reg Number</th>
+                                <th>Account Status</th>
+                                <th>Registry Date</th>
+                                <th style={{ textAlign: 'right' }}>Management</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {users.map((user) => (
                                 <tr key={user._id}>
                                     <td>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-bg-tertiary flex items-center justify-center font-bold text-xs">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--uv-page-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '11px' }}>
                                                 {user.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <div className="font-bold">{user.name}</div>
-                                                <div className="text-[10px] text-muted">{user.email}</div>
+                                                <div style={{ fontWeight: 600, fontSize: '14px' }}>{user.name}</div>
+                                                <div className="uv-mono-xs" style={{ color: 'var(--uv-muted)' }}>{user.email}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="text-sm font-mono text-primary-light">{user.registrationNumber}</td>
+                                    <td className="uv-mono-xs" style={{ color: 'var(--uv-primary)', fontWeight: 600 }}>{user.registrationNumber}</td>
                                     <td>
-                                        {user.isBlocked ? (
-                                            <span className="badge badge-danger">Suspended</span>
-                                        ) : (
-                                            <span className="badge badge-success">Active</span>
-                                        )}
+                                        <UvTag color={user.isBlocked ? 'orange' : 'green'}>
+                                            {user.isBlocked ? 'SUSPENDED' : 'ACTIVE'}
+                                        </UvTag>
                                     </td>
-                                    <td className="text-xs text-muted">{new Date(user.createdAt).toLocaleDateString()}</td>
-                                    <td className="text-right">
-                                        <button
-                                            className={`btn btn-sm ${user.isBlocked ? 'btn-success' : 'btn-danger'}`}
+                                    <td className="uv-mono-xs">{new Date(user.createdAt).toLocaleDateString()}</td>
+                                    <td style={{ textAlign: 'right' }}>
+                                        <UvButton 
+                                            variant="outline" 
+                                            style={{ padding: '6px 12px', fontSize: '11px', color: user.isBlocked ? 'var(--uv-green)' : '#d00' }}
                                             onClick={() => toggleBlock(user._id, user.isBlocked)}
                                         >
-                                            {user.isBlocked ? 'Unblock' : 'Restrict Access'}
-                                        </button>
+                                            {user.isBlocked ? 'RESTORE ACCESS' : 'RESTRICT'}
+                                        </UvButton>
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </UvPanel>
         </div>
     );
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import styles from './admin.module.css';
+import { UvPanel, UvBadge, UvTag, UvButton, UvInput, UvTextarea } from '@/components/UvComponents';
 
 export default function ContentManagementPage() {
     const { authFetch } = useAuth();
@@ -51,7 +51,7 @@ export default function ContentManagementPage() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm('Are you sure you want to delete this post?')) return;
+        if (!confirm('Permanently delete this post?')) return;
         try {
             const res = await authFetch(`/api/posts/${id}`, { method: 'DELETE' });
             if (res.ok) fetchPosts();
@@ -69,74 +69,82 @@ export default function ContentManagementPage() {
         setShowModal(true);
     };
 
-    return (
-        <div className="animate-fadeIn">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold mb-2">Content Management</h1>
-                    <p className="text-muted">Create and manage announcements, fest updates, and educational materials.</p>
-                </div>
-                <button className="btn btn-primary" onClick={() => { setEditingPost(null); setFormData({ title: '', content: '', category: 'fest-updates', isPinned: false }); setShowModal(true); }}>
-                    Create New Post
-                </button>
-            </div>
+    const getCatColor = (cat) => {
+        if (cat === 'fest-updates') return 'orange';
+        if (cat === 'daily-updates') return 'blue';
+        return 'green';
+    };
 
-            <div className="userTableContainer">
-                <table className="data-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Category</th>
-                            <th>Date</th>
-                            <th>Pinned</th>
-                            <th className="text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {posts.map((post) => (
-                            <tr key={post._id}>
-                                <td>
-                                    <div className="font-bold truncate max-w-xs">{post.title}</div>
-                                </td>
-                                <td>
-                                    <span className={`badge ${post.category === 'fest-updates' ? 'badge-warning' : post.category === 'daily-updates' ? 'badge-info' : 'badge-success'}`}>
-                                        {post.category.replace('-', ' ')}
-                                    </span>
-                                </td>
-                                <td className="text-xs text-muted">{new Date(post.createdAt).toLocaleDateString()}</td>
-                                <td>{post.isPinned ? '✅' : '—'}</td>
-                                <td className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <button className="btn btn-secondary btn-xs" onClick={() => openEdit(post)}>Edit</button>
-                                        <button className="btn btn-danger btn-xs" onClick={() => handleDelete(post._id)}>Delete</button>
-                                    </div>
-                                </td>
+    return (
+        <div className="uv-page">
+            <UvPanel 
+                title="System Publications" 
+                headerActions={
+                    <UvButton onClick={() => { setEditingPost(null); setFormData({ title: '', content: '', category: 'fest-updates', isPinned: false }); setShowModal(true); }}>
+                        + CREATE PUBLICATION
+                    </UvButton>
+                }
+            >
+                {loading ? (
+                    <div className="uv-mono-sm" style={{ padding: '40px 0' }}>LOADING REPOSITORY...</div>
+                ) : (
+                    <table className="uv-table">
+                        <thead>
+                            <tr>
+                                <th>Publication Title</th>
+                                <th>Category</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th style={{ textAlign: 'right' }}>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            {posts.map((post) => (
+                                <tr key={post._id}>
+                                    <td>
+                                        <div style={{ fontWeight: 600, fontSize: '15px' }}>{post.title}</div>
+                                        {post.isPinned && <div className="uv-mono-xs" style={{ color: 'var(--uv-primary)', marginTop: '4px' }}>★ PINNED TO TOP</div>}
+                                    </td>
+                                    <td>
+                                        <UvTag color={getCatColor(post.category)}>{post.category.replace('-', ' ')}</UvTag>
+                                    </td>
+                                    <td className="uv-mono-xs">{new Date(post.createdAt).toLocaleDateString()}</td>
+                                    <td>
+                                        <UvBadge status="answered">LIVE</UvBadge>
+                                    </td>
+                                    <td style={{ textAlign: 'right' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                            <UvButton variant="outline" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => openEdit(post)}>EDIT</UvButton>
+                                            <UvButton variant="outline" style={{ padding: '6px 12px', fontSize: '12px', color: '#d00' }} onClick={() => handleDelete(post._id)}>DEL</UvButton>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </UvPanel>
 
             {showModal && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h2 className="text-xl font-bold mb-6">{editingPost ? 'Edit Post' : 'Create New Post'}</h2>
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                            <div className="input-group">
-                                <label>Title</label>
-                                <input
-                                    className="input-field"
-                                    value={formData.title}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    required
-                                />
-                            </div>
-
-                            <div className="input-group">
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(14,14,20,0.8)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                    <div className="uv-panel animate-scaleIn" style={{ maxWidth: '600px', width: '100%', margin: 0 }}>
+                        <div className="uv-panel-header">
+                            <h2 style={{ fontFamily: 'var(--uv-font-heading)' }}>{editingPost ? 'Edit Publication' : 'Create New Publication'}</h2>
+                            <UvButton variant="outline" style={{ padding: '4px 10px' }} onClick={() => setShowModal(false)}>✕</UvButton>
+                        </div>
+                        <form onSubmit={handleSubmit} className="uv-panel-body">
+                            <UvInput 
+                                label="Title" 
+                                value={formData.title} 
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
+                                required 
+                            />
+                            
+                            <div className="uv-form-group">
                                 <label>Category</label>
-                                <select
-                                    className="input-field"
-                                    value={formData.category}
+                                <select 
+                                    className="uv-input" 
+                                    value={formData.category} 
                                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                 >
                                     <option value="fest-updates">Fest Updates</option>
@@ -145,35 +153,41 @@ export default function ContentManagementPage() {
                                 </select>
                             </div>
 
-                            <div className="input-group">
-                                <label>Content</label>
-                                <textarea
-                                    className="input-field"
-                                    rows="6"
-                                    value={formData.content}
-                                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                    required
-                                ></textarea>
-                            </div>
+                            <UvTextarea 
+                                label="Body Content" 
+                                rows="6" 
+                                value={formData.content} 
+                                onChange={(e) => setFormData({ ...formData, content: e.target.value })} 
+                                required 
+                            />
 
-                            <div className="flex items-center gap-3">
-                                <input
-                                    type="checkbox"
-                                    id="pin"
-                                    checked={formData.isPinned}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
+                                <input 
+                                    type="checkbox" 
+                                    id="pin" 
+                                    checked={formData.isPinned} 
                                     onChange={(e) => setFormData({ ...formData, isPinned: e.target.checked })}
+                                    style={{ width: '18px', height: '18px', accentColor: 'var(--uv-primary)' }}
                                 />
-                                <label htmlFor="pin" className="text-sm font-medium">Pin this post to top</label>
+                                <label htmlFor="pin" className="uv-mono-xs" style={{ fontWeight: 600, cursor: 'pointer' }}>PIN THIS PUBLICATION</label>
                             </div>
 
-                            <div className="flex justify-end gap-3 mt-4">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">{editingPost ? 'Update Post' : 'Publish Post'}</button>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <UvButton type="submit" style={{ flex: 1 }}>{editingPost ? 'UPDATE PUBLICATION' : 'PUBLISH NOW'}</UvButton>
+                                <UvButton type="button" variant="outline" onClick={() => setShowModal(false)}>CANCEL</UvButton>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
+
+            <style jsx>{`
+                @keyframes scaleIn {
+                    from { opacity: 0; transform: scale(0.95); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                .animate-scaleIn { animation: scaleIn 0.3s ease-out; }
+            `}</style>
         </div>
     );
 }

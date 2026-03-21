@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import styles from '../dashboard.module.css';
+import { UvPanel, UvBadge, UvTag, UvButton, UvTextarea } from '@/components/UvComponents';
 
 export default function ConfessionsPage() {
     const { authFetch } = useAuth();
@@ -74,93 +74,75 @@ export default function ConfessionsPage() {
     };
 
     return (
-        <div className="animate-fadeIn">
-            <div className="flex justify-between items-center mb-10">
+        <div className="uv-page">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '48px', alignItems: 'start' }}>
+                {/* FEED COLUMN */}
                 <div>
-                    <h1 className="text-3xl font-bold mb-2">Campus Confessions</h1>
-                    <p className="text-muted">Share your thoughts anonymously. Every Friday, admin opens the floodgates!</p>
-                </div>
-                {!isEnabled && (
-                    <div className="badge badge-danger">Closed (Only on Fridays)</div>
-                )}
-                {isEnabled && (
-                    <div className="badge badge-success">Open for Entries</div>
-                )}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-1">
-                    <div className="card border border-subtle h-fit sticky top-28">
-                        <h3 className="text-lg font-bold mb-4">Post a Confession</h3>
-                        {isEnabled ? (
-                            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                                <p className="text-xs text-muted mb-2">
-                                    Confessions are anonymous to other students, but are reviewed by the admin before being posted publicly.
-                                </p>
-                                <div className="input-group">
-                                    <textarea
-                                        className="input-field"
-                                        placeholder="Write your secret..."
-                                        rows="6"
-                                        value={confessionText}
-                                        onChange={(e) => setConfessionText(e.target.value)}
-                                        disabled={submitting}
-                                    />
-                                </div>
-                                {error && <div className="text-accent-rose text-sm font-medium">{error}</div>}
-                                {message && <div className="text-accent-emerald text-sm font-medium">{message}</div>}
-                                <button
-                                    type="submit"
-                                    className="btn btn-primary w-full"
-                                    disabled={submitting || !confessionText.trim()}
-                                >
-                                    {submitting ? 'Submitting...' : 'Submit Secret'}
-                                </button>
-                            </form>
-                        ) : (
-                            <div className="text-center py-10 flex flex-col items-center gap-4">
-                                <div className="text-4xl">🔒</div>
-                                <p className="text-sm text-text-secondary font-medium">Submission is disabled.</p>
-                                <p className="text-xs text-muted">Confessions are enabled ONLY on Fridays by the admin.</p>
-                            </div>
-                        )}
+                    <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div className="uv-mono-xs" style={{ fontWeight: 800, color: '#1a1a1a' }}>THE VOID: ANONYMOUS FEED</div>
+                        <div style={{ height: '1px', flex: 1, background: 'var(--uv-border)' }}></div>
                     </div>
-                </div>
 
-                <div className="lg:col-span-2">
-                    <h3 className="text-xl font-bold mb-6">Wall of Secrets</h3>
                     {loading ? (
-                        <div className="flex flex-col gap-6">
-                            {[1, 2, 3].map(i => (
-                                <div key={i} className="card skeleton h-32 w-full"></div>
-                            ))}
-                        </div>
+                        <div className="uv-mono-sm">RECONSTRUCTING SECRETS...</div>
                     ) : confessions.length === 0 ? (
-                        <div className="empty-state card bg-bg-secondary border-dashed">
-                            <div className="empty-icon">🤫</div>
-                            <div className="empty-title">Silence... for now</div>
-                            <p className="empty-desc">No confessions have been approved yet. If you've submitted one, it's currently under review.</p>
+                        <div style={{ padding: '80px 40px', textAlign: 'center', background: 'white', borderRadius: '16px', border: '1px solid var(--uv-border)' }}>
+                            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🤫</div>
+                            <div className="uv-mono-sm">THE VOID IS SILENT</div>
+                            <p style={{ color: 'var(--uv-muted)', marginTop: '8px' }}>No approved entries found in the current cycle.</p>
                         </div>
                     ) : (
-                        <div className="columns-1 md:columns-2 gap-6 space-y-6">
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
                             {confessions.map((c) => (
-                                <div
-                                    key={c._id}
-                                    className="card break-inside-avoid bg-bg-card hover:border-accent-violet transition-all transform hover:-rotate-1"
+                                <UvPanel 
+                                    key={c._id} 
+                                    title={<UvTag color="purple">ANONYMOUS</UvTag>}
+                                    headerActions={<div className="uv-mono-xs" style={{ color: 'var(--uv-muted)' }}>{new Date(c.createdAt).toLocaleDateString()}</div>}
                                 >
-                                    <p className="text-text-primary text-sm leading-relaxed mb-4 italic">
+                                    <p style={{ fontSize: '1rem', lineHeight: '1.7', color: '#1a1a1a', fontStyle: 'italic', marginBottom: '20px' }}>
                                         "{c.confessionText}"
                                     </p>
-                                    <div className="flex justify-between items-center pt-3 border-t border-subtle border-opacity-30">
-                                        <span className="text-[10px] text-accent-violet font-bold uppercase tracking-wider">#Confession</span>
-                                        <span className="text-[10px] text-muted">
-                                            {new Date(c.createdAt).toLocaleDateString()}
-                                        </span>
-                                    </div>
-                                </div>
+                                    <div className="uv-mono-xs" style={{ color: 'var(--uv-primary)', opacity: 0.6 }}>#CAMPUS_SECRET</div>
+                                </UvPanel>
                             ))}
                         </div>
                     )}
+                </div>
+
+                {/* SUBMISSION COLUMN */}
+                <div style={{ position: 'sticky', top: '24px' }}>
+                    <UvPanel title="TRANSMIT SECRET">
+                        {isEnabled ? (
+                            <form onSubmit={handleSubmit}>
+                                <div className="uv-mono-xs" style={{ marginBottom: '16px', color: 'var(--uv-muted)', lineHeight: 1.5 }}>
+                                    ENCRYPTION ACTIVE. ENTRIES ARE SUBJECT TO ANONYMOUS REVIEW BEFORE BROADCAST.
+                                </div>
+                                <UvTextarea 
+                                    placeholder="TYPE YOUR ANONYMOUS MESSAGE..."
+                                    value={confessionText}
+                                    onChange={(e) => setConfessionText(e.target.value)}
+                                    disabled={submitting}
+                                    style={{ marginBottom: '20px', minHeight: '180px' }}
+                                />
+                                {error && <div className="uv-mono-xs" style={{ color: 'var(--uv-primary)', marginBottom: '16px' }}>ERR: {error.toUpperCase()}</div>}
+                                {message && <div className="uv-mono-xs" style={{ color: 'var(--uv-green)', marginBottom: '16px' }}>ACK: {message.toUpperCase()}</div>}
+                                
+                                <UvButton 
+                                    type="submit" 
+                                    disabled={submitting || !confessionText.trim()}
+                                    style={{ width: '100%' }}
+                                >
+                                    {submitting ? 'TRANSMITTING...' : 'SEND TO VOID'}
+                                </UvButton>
+                            </form>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '40px 20px', background: 'var(--uv-page-bg)', borderRadius: '12px', border: '1px solid var(--uv-border)' }}>
+                                <div style={{ fontSize: '32px', marginBottom: '16px' }}>🔒</div>
+                                <div className="uv-mono-sm" style={{ marginBottom: '8px' }}>VOID CLOSED</div>
+                                <p style={{ fontSize: '12px', color: 'var(--uv-muted)' }}>Submissions are restricted to scheduled Friday sessions.</p>
+                            </div>
+                        )}
+                    </UvPanel>
                 </div>
             </div>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import styles from '../dashboard.module.css';
+import { UvPanel, UvBadge, UvTag, UvButton } from '@/components/UvComponents';
 
 export default function DailyUpdatesPage() {
     const { authFetch } = useAuth();
@@ -32,62 +32,39 @@ export default function DailyUpdatesPage() {
     }, [fetchUpdates]);
 
     return (
-        <div className="animate-fadeIn">
-            <div className="mb-10">
-                <h1 className="text-3xl font-bold mb-2">Daily Updates</h1>
-                <p className="text-muted">Stay connected with the latest campus and regional news, announcements, and important notices.</p>
-            </div>
-
+        <div className="uv-page">
             {loading ? (
-                <div className="flex flex-col gap-8">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="card skeleton h-48"></div>
-                    ))}
-                </div>
+                <div className="uv-mono-sm">FETCHING GLOBAL RELEASES...</div>
             ) : updates.length === 0 ? (
-                <div className="empty-state">
-                    <div className="empty-icon">📢</div>
-                    <div className="empty-title">Everything is quiet</div>
-                    <p className="empty-desc">Check back later for today's campus highlights and official notices.</p>
+                <div style={{ textAlign: 'center', padding: '100px 40px', background: 'white', borderRadius: '14px', border: '1px solid var(--uv-border)' }}>
+                    <div style={{ fontSize: '64px', marginBottom: '24px' }}>📡</div>
+                    <div className="uv-mono-sm">NO NEW RELEASES</div>
+                    <p style={{ color: 'var(--uv-muted)', marginTop: '8px' }}>The university broadcast is currently on standby. Check back for live updates.</p>
                 </div>
             ) : (
-                <div className="max-w-4xl mx-auto flex flex-col gap-8">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '40px', maxWidth: '800px' }}>
                     {updates.map((update, index) => (
-                        <article
-                            key={update._id}
-                            className={`card overflow-hidden border-l-4 ${index === 0 ? 'bg-bg-tertiary border-l-primary' : 'border-l-accent-cyan'}`}
+                        <UvPanel 
+                            key={update._id} 
+                            title={index === 0 ? <UvTag color="orange">PRIORITY BROADCAST</UvTag> : <UvTag color="blue">CAMPUS NEWS</UvTag>}
+                            headerActions={<div className="uv-mono-xs" style={{ color: 'var(--uv-muted)' }}>{new Date(update.createdAt).toLocaleDateString()}</div>}
                         >
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="flex items-center gap-2">
-                                    <span className={`badge ${index === 0 ? 'badge-primary' : 'badge-info'}`}>
-                                        {index === 0 ? 'Top Story' : 'New Update'}
-                                    </span>
-                                    <span className="text-xs text-muted">
-                                        {new Date(update.createdAt).toLocaleDateString()} at {new Date(update.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                </div>
+                            <div style={{ marginBottom: '32px' }}>
+                                <h1 style={{ fontFamily: 'var(--uv-font-heading)', fontSize: index === 0 ? '32px' : '24px', fontWeight: 900, marginBottom: '20px', lineHeight: 1.2 }}>{update.title}</h1>
+                                <p style={{ fontSize: '1rem', lineHeight: '1.8', color: '#1a1a1a', fontWeight: 400, whiteSpace: 'pre-wrap' }}>{update.content}</p>
                             </div>
 
-                            <h2 className={`font-bold mb-3 ${index === 0 ? 'text-2xl' : 'text-xl'}`}>{update.title}</h2>
-                            <div className="mb-6">
-                                <p className="text-text-secondary leading-relaxed whitespace-pre-wrap">
-                                    {update.content}
-                                </p>
-                            </div>
-
-                            <div className="pt-4 border-t border-subtle flex justify-between items-center">
-                                <div className="flex items-center gap-2 text-xs text-muted">
-                                    <svg className="w-4 h-4 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    <span>Campus Main Office</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '24px', borderTop: '1px solid var(--uv-border)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--uv-page-bg)', border: '1px solid var(--uv-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '12px' }}>U</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span className="uv-mono-xs" style={{ fontWeight: 800 }}>UNIVERA PRESS</span>
+                                        <span className="uv-mono-xs" style={{ color: 'var(--uv-muted)', fontSize: '10px' }}>OFFICIAL RELEASE</span>
+                                    </div>
                                 </div>
-                                <button className="text-primary-light text-sm font-semibold hover:underline">
-                                    Read More
-                                </button>
+                                <UvButton variant="outline" style={{ fontSize: '11px' }}>SHARE ARCHIVE</UvButton>
                             </div>
-                        </article>
+                        </UvPanel>
                     ))}
                 </div>
             )}

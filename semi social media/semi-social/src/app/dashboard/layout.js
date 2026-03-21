@@ -4,22 +4,20 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import styles from './dashboard.module.css';
 
 const studentNavItems = [
-    { href: '/dashboard', label: 'Overview', icon: '🏠' },
-    { href: '/dashboard/doubts', label: 'Faculty Doubts', icon: '💬' },
-    { href: '/dashboard/fest-updates', label: 'Fest Updates', icon: '🎉' },
-    { href: '/dashboard/resources', label: 'Papers & Materials', icon: '📚' },
-    { href: '/dashboard/daily-updates', label: 'Daily Updates', icon: '📢' },
-    { href: '/dashboard/confessions', label: 'Confessions', icon: '🤫' },
+    { href: '/dashboard', label: 'OVERVIEW', icon: '🏠' },
+    { href: '/dashboard/doubts', label: 'MY DOUBTS', icon: '💬' },
+    { href: '/dashboard/fest-updates', label: 'FEST UPDATES', icon: '🎉' },
+    { href: '/dashboard/resources', label: 'RESOURCES', icon: '📚' },
+    { href: '/dashboard/daily-updates', label: 'DAILY NEWS', icon: '📢' },
+    { href: '/dashboard/confessions', label: 'CONFESSIONS', icon: '🤫' },
 ];
 
 export default function DashboardLayout({ children }) {
-    const { user, loading, logout, isStudent } = useAuth();
+    const { user, loading, logout } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
-    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (!loading && !user) {
@@ -32,90 +30,104 @@ export default function DashboardLayout({ children }) {
 
     if (loading || !user) {
         return (
-            <div className={styles.loadingScreen}>
-                <div className={styles.spinner}></div>
+            <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0e0e14' }}>
+                <div className="uv-mono-sm" style={{ color: 'white' }}>AUTHENTICATING...</div>
             </div>
         );
     }
 
     return (
-        <div className={styles.dashLayout}>
-            {/* Mobile overlay */}
-            {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebarOpen(false)}></div>}
-
-            {/* Sidebar */}
-            <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
-                <div className={styles.sidebarHeader}>
-                    <Link href="/dashboard" className={styles.logo}>
-                        <div className={styles.logoIcon}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                                <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                            </svg>
-                        </div>
-                        <span className={styles.logoText}>CampusConnect</span>
-                    </Link>
+        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--uv-page-bg)' }}>
+            {/* UNIVERA SIDEBAR (260px) */}
+            <aside style={{ width: '260px', background: 'var(--uv-sidebar-bg)', color: 'white', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, bottom: 0, left: 0, zIndex: 100 }}>
+                <div style={{ padding: '32px 24px' }}>
+                    <div style={{ fontFamily: 'var(--uv-font-heading)', fontSize: '20px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '28px', height: '28px', background: 'var(--uv-primary)', borderRadius: '6px' }}></div>
+                        UNIVERA
+                    </div>
                 </div>
 
-                <nav className={styles.sidebarNav}>
+                <nav style={{ flex: 1, padding: '0 12px' }}>
+                    <div className="uv-mono-xs" style={{ color: 'var(--uv-muted)', paddingLeft: '12px', marginBottom: '16px', fontWeight: 600 }}>CAMPUS MODULES</div>
                     {studentNavItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`${styles.navItem} ${pathname === item.href ? styles.navItemActive : ''}`}
-                            onClick={() => setSidebarOpen(false)}
+                        <Link 
+                            key={item.href} 
+                            href={item.href} 
+                            style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '12px', 
+                                padding: '12px 14px', 
+                                borderRadius: '10px', 
+                                color: pathname === item.href ? 'white' : 'var(--uv-muted)', 
+                                background: pathname === item.href ? 'rgba(232, 67, 10, 0.15)' : 'transparent',
+                                textDecoration: 'none',
+                                marginBottom: '4px',
+                                transition: 'all 0.2s ease',
+                                border: pathname === item.href ? '1px solid rgba(232, 67, 10, 0.2)' : '1px solid transparent'
+                            }}
+                            className={pathname === item.href ? '' : 'uv-nav-hover'}
                         >
-                            <span className={styles.navIcon}>{item.icon}</span>
-                            <span className={styles.navLabel}>{item.label}</span>
+                            <span style={{ fontSize: '18px' }}>{item.icon}</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em' }}>{item.label}</span>
                         </Link>
                     ))}
                 </nav>
 
-                <div className={styles.sidebarFooter}>
-                    <div className={styles.userInfo}>
-                        <div className={styles.userAvatar}>
-                            {user.name?.charAt(0)?.toUpperCase()}
+                {/* USER CHIP / FOOTER */}
+                <div style={{ padding: '24px', borderTop: '1px solid #1e1e26' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: '#181820', borderRadius: '12px', marginBottom: '16px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--uv-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px' }}>
+                            {user.name?.charAt(0)}
                         </div>
-                        <div className={styles.userMeta}>
-                            <span className={styles.userName}>{user.name}</span>
-                            <span className={styles.userRole}>Student</span>
+                        <div style={{ flex: 1, overflow: 'hidden' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
+                            <div className="uv-mono-xs" style={{ color: 'var(--uv-muted)', fontSize: '9px' }}>STUDENT</div>
                         </div>
                     </div>
-                    <button className={styles.logoutBtn} onClick={logout} title="Logout">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                            <polyline points="16 17 21 12 16 7" />
-                            <line x1="21" y1="12" x2="9" y2="12" />
-                        </svg>
+                    <button 
+                        onClick={logout}
+                        style={{ width: '100%', background: 'transparent', border: '1px solid #2d2d3d', color: '#8a8a9a', padding: '10px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease' }}
+                    >
+                        SIGN OUT
                     </button>
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <div className={styles.mainWrapper}>
-                {/* Top Bar */}
-                <header className={styles.topbar}>
-                    <button className={styles.menuBtn} onClick={() => setSidebarOpen(!sidebarOpen)}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="3" y1="12" x2="21" y2="12" />
-                            <line x1="3" y1="6" x2="21" y2="6" />
-                            <line x1="3" y1="18" x2="21" y2="18" />
-                        </svg>
-                    </button>
-                    <div className={styles.topbarTitle}>
-                        {studentNavItems.find(item => item.href === pathname)?.label || 'Dashboard'}
+            {/* MAIN CONTENT AREA */}
+            <main style={{ flex: 1, marginLeft: '260px', padding: '40px 60px' }}>
+                <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <div>
+                        <div className="uv-mono-xs" style={{ color: 'var(--uv-primary)', fontWeight: 700, marginBottom: '8px' }}>
+                            {studentNavItems.find(i => i.href === pathname)?.label || 'DASHBOARD'}
+                        </div>
+                        <h2 style={{ fontFamily: 'var(--uv-font-heading)', fontSize: '32px', fontWeight: 900, margin: 0 }}>
+                            {pathname === '/dashboard' ? `Welcome back, ${user.name?.split(' ')[0]}!` : studentNavItems.find(i => i.href === pathname)?.label}
+                        </h2>
                     </div>
-                    <div className={styles.topbarRight}>
-                        <span className={styles.greeting}>
-                            Hello, <strong>{user.name?.split(' ')[0]}</strong>
-                        </span>
+                    <div style={{ color: 'var(--uv-muted)', fontSize: '14px', fontWeight: 500 }}>
+                        {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                     </div>
                 </header>
 
-                <main className={styles.mainContent}>
+                <div className="animate-fadeIn">
                     {children}
-                </main>
-            </div>
+                </div>
+            </main>
+
+            <style jsx>{`
+                .uv-nav-hover:hover {
+                    color: white !important;
+                    background: rgba(255,255,255,0.05) !important;
+                }
+                @keyframes uvFadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fadeIn {
+                    animation: uvFadeIn 0.4s ease-out;
+                }
+            `}</style>
         </div>
     );
 }

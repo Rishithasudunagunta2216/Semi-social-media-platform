@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import styles from './admin.module.css';
+import { UvBadge, UvTag, UvButton, UvTextarea } from '@/components/UvComponents';
 
 export default function ModerationPage() {
     const { authFetch } = useAuth();
@@ -11,14 +11,13 @@ export default function ModerationPage() {
     const [replyId, setReplyId] = useState(null);
     const [replyText, setReplyText] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const [filter, setFilter] = useState('all'); // all, flagged, pending
+    const [filter, setFilter] = useState('all'); // all, pending, answered
 
     const fetchQuestions = useCallback(async () => {
         setLoading(true);
         try {
-            let url = '/api/questions?category=doubts-about-faculty&limit=50';
-            if (filter === 'flagged') url += '&flagged=true';
-            const res = await authFetch(url);
+            // Fetch all questions for admin to see
+            const res = await authFetch('/api/questions?category=all&limit=50');
             const data = await res.json();
             if (res.ok) {
                 setQuestions(data.questions);
@@ -26,7 +25,7 @@ export default function ModerationPage() {
         } catch (e) { } finally {
             setLoading(false);
         }
-    }, [authFetch, filter]);
+    }, [authFetch]);
 
     useEffect(() => {
         fetchQuestions();
@@ -34,10 +33,8 @@ export default function ModerationPage() {
 
     const handleAction = async (id, action, body = {}) => {
         try {
-            const res = await authFetch(`/api/questions/${id}`, {
-                method: action === 'delete' ? 'DELETE' : action === 'patch' ? 'PATCH' : 'POST',
-                body: Object.keys(body).length ? JSON.stringify(body) : undefined,
-            });
+            if (action === 'post') setSubmitting(true);
+            const res = await authFetch(`/api/questions/${id}`, action === 'delete' ? { method: 'DELETE' } : action === 'patch' ? { method: 'PATCH', body: JSON.stringify(body) } : { method: 'POST', body: JSON.stringify(body) });
             if (res.ok) {
                 if (action === 'delete') {
                     setQuestions(questions.filter(q => q._id !== id));
@@ -49,126 +46,159 @@ export default function ModerationPage() {
                     setReplyText('');
                 }
             }
-        } catch (e) { }
+        } catch (e) { } finally {
+            if (action === 'post') setSubmitting(false);
+        }
     };
 
-    const getScoreColor = (score) => {
-        if (score >= 0.7) return 'var(--accent-rose)';
-        if (score >= 0.4) return 'var(--accent-amber)';
-        return 'var(--accent-emerald)';
+    // Filter Logic
+    const filteredQuestions = questions.filter(q => {
+        if (filter === 'pending') return !q.answers || q.answers.length === 0;
+        if (filter === 'answered') return q.answers && q.answers.length > 0;
+        return true;
+    });
+
+    const pendingCount = questions.filter(q => !q.answers || q.answers.length === 0).length;
+
+    const getTimeAgo = (dateStr) => {
+        const diff = new Date() - new Date(dateStr);
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        if (hours < 1) return 'Just now';
+        if (hours === 1) return '1 hour ago';
+        if (hours < 24) return `${hours} hours ago`;
+        return `${Math.floor(hours / 24)} days ago`;
     };
 
     return (
-        <div className="animate-fadeIn">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold mb-2">Doubt Moderation</h1>
-                    <p className="text-muted">Review student questions, provide answers, and manage community content.</p>
-                </div>
-                <div className="tab-nav">
-                    <button className={`tab-item ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All</button>
-                    <button className={`tab-item ${filter === 'flagged' ? 'active' : ''}`} onClick={() => setFilter('flagged')}>Flagged</button>
-                </div>
+        <div>
+            <p style={{ color: '#6b7280', fontSize: '15px', marginTop: '-24px', marginBottom: '32px' }}>Review and reply to student questions</p>
+
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: '#ffffff', padding: '6px', borderRadius: '12px', width: 'fit-content', border: '1px solid #e5e5e5' }}>
+                <button 
+                    onClick={() => setFilter('all')}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: filter === 'all' ? '#ffedd5' : 'transparent', color: filter === 'all' ? '#ea580c' : '#6b7280', fontWeight: filter === 'all' ? 700 : 500, cursor: 'pointer', fontSize: '13px', transition: '0.2s' }}
+                >
+                    All
+                </button>
+                <button 
+                    onClick={() => setFilter('pending')}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: filter === 'pending' ? '#ffedd5' : 'transparent', color: filter === 'pending' ? '#ea580c' : '#6b7280', fontWeight: filter === 'pending' ? 700 : 500, cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', transition: '0.2s' }}
+                >
+                    Pending
+                    {pendingCount > 0 && (
+                        <div style={{ background: filter === 'pending' ? '#ea580c' : '#ef4444', color: 'white', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800 }}>
+                            {pendingCount}
+                        </div>
+                    )}
+                </button>
+                <button 
+                    onClick={() => setFilter('answered')}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: filter === 'answered' ? '#ffedd5' : 'transparent', color: filter === 'answered' ? '#ea580c' : '#6b7280', fontWeight: filter === 'answered' ? 700 : 500, cursor: 'pointer', fontSize: '13px', transition: '0.2s' }}
+                >
+                    Answered
+                </button>
             </div>
 
             {loading ? (
-                <div className="flex flex-col gap-6">
-                    {[1, 2, 3].map(i => <div key={i} className="card skeleton h-40"></div>)}
-                </div>
-            ) : questions.length === 0 ? (
-                <div className="empty-state">
-                    <div className="empty-icon">🛡️</div>
-                    <div className="empty-title">Queue is clear</div>
-                    <p className="empty-desc">No questions matching your current filter.</p>
+                <div className="uv-mono-sm" style={{ padding: '40px 0', color: '#6b7280' }}>RETRIEVING QUEUE...</div>
+            ) : filteredQuestions.length === 0 ? (
+                <div style={{ padding: '60px', textAlign: 'center', background: '#ffffff', borderRadius: '16px', border: '1px solid #e5e5e5' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '20px' }}>✨</div>
+                    <h2 style={{ fontFamily: 'var(--uv-font-heading)', marginBottom: '12px', fontSize: '24px', color: '#111827' }}>You're all caught up!</h2>
+                    <p style={{ color: '#6b7280' }}>No questions match your current filter.</p>
                 </div>
             ) : (
-                <div className="flex flex-col gap-6">
-                    {questions.map((q) => (
-                        <div key={q._id} className={`card ${q.isFlagged ? 'border-l-4 border-l-accent-rose' : 'border-l-4 border-l-primary'}`}>
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-bg-tertiary flex items-center justify-center font-bold">
-                                        {q.studentId?.name?.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold">{q.studentId?.name}</h4>
-                                        <p className="text-xs text-muted">{q.studentId?.registrationNumber} • {new Date(q.createdAt).toLocaleString()}</p>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col items-end gap-2">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-bold text-muted uppercase">AI Score</span>
-                                        <div className="spam-bar w-24">
-                                            <div
-                                                className="spam-bar-fill"
-                                                style={{ width: `${q.aiSpamScore * 100}%`, backgroundColor: getScoreColor(q.aiSpamScore) }}
-                                            ></div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {filteredQuestions.map((q) => {
+                        const isAnswered = q.answers && q.answers.length > 0;
+                        return (
+                            <div key={q._id} style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #e5e5e5', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+                                {/* Card Header */}
+                                <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#ffedd5', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '14px' }}>
+                                            {q.studentId?.name?.split(' ').map(n=>n[0]).join('').substring(0, 2).toUpperCase() || 'ST'}
+                                        </div>
+                                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#111827' }}>{q.studentId?.name || 'Anonymous Student'}</div>
+                                        <div style={{ padding: '4px 10px', background: '#f3f4f6', color: '#4b5563', borderRadius: '6px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>
+                                            {q.category}
+                                        </div>
+                                        <div style={{ fontSize: '13px', color: '#9ca3af', fontWeight: 500 }}>
+                                            {getTimeAgo(q.createdAt)}
                                         </div>
                                     </div>
-                                    {q.isFlagged && <span className="badge badge-danger">High Risk</span>}
-                                </div>
-                            </div>
-
-                            <div className="mb-6 p-4 bg-bg-secondary rounded-lg border border-subtle">
-                                <p className="text-sm italic text-muted mb-2">Student asked:</p>
-                                <p className="text-text-primary">{q.questionText}</p>
-                            </div>
-
-                            {q.aiAnalysis?.reasoning && q.isFlagged && (
-                                <div className="mb-6 p-3 rounded-lg bg-accent-rose bg-opacity-10 border border-accent-rose border-opacity-20 text-xs text-accent-rose">
-                                    <strong>AI Analysis:</strong> {q.aiAnalysis.reasoning}
-                                </div>
-                            )}
-
-                            <div className="flex justify-between items-center">
-                                <div className="flex gap-2">
-                                    <button className="btn btn-primary btn-sm" onClick={() => setReplyId(q._id)}>
-                                        {q.answers?.length > 0 ? 'Edit Answer' : 'Answer Question'}
-                                    </button>
-                                    <button className="btn btn-secondary btn-sm" onClick={() => handleAction(q._id, 'delete')}>
-                                        Delete
-                                    </button>
-                                </div>
-                                {!q.isApproved && (
-                                    <button className="btn btn-success btn-sm" onClick={() => handleAction(q._id, 'patch', { isApproved: true, isFlagged: false })}>
-                                        Approve
-                                    </button>
-                                )}
-                            </div>
-
-                            {replyId === q._id && (
-                                <div className="mt-6 animate-fadeIn">
-                                    <div className="input-group">
-                                        <label>Official Answer</label>
-                                        <textarea
-                                            className="input-field"
-                                            rows="4"
-                                            placeholder="Type your official response..."
-                                            value={replyText}
-                                            onChange={(e) => setReplyText(e.target.value)}
-                                        ></textarea>
-                                    </div>
-                                    <div className="flex justify-end gap-2 mt-4">
-                                        <button className="btn btn-secondary btn-sm" onClick={() => setReplyId(null)}>Cancel</button>
-                                        <button
-                                            className="btn btn-primary btn-sm"
-                                            onClick={() => handleAction(q._id, 'post', { answerText: replyText })}
-                                            disabled={!replyText.trim() || submitting}
-                                        >
-                                            Post Answer
-                                        </button>
+                                    <div>
+                                        {isAnswered ? (
+                                            <div style={{ padding: '4px 12px', background: '#dcfce7', color: '#166534', borderRadius: '20px', fontSize: '11px', fontWeight: 800, letterSpacing: '0.05em', border: '1px solid #bbf7d0' }}>ANSWERED</div>
+                                        ) : (
+                                            <div style={{ padding: '4px 12px', background: '#fef3c7', color: '#92400e', borderRadius: '20px', fontSize: '11px', fontWeight: 800, letterSpacing: '0.05em', border: '1px solid #fde68a' }}>PENDING</div>
+                                        )}
                                     </div>
                                 </div>
-                            )}
 
-                            {q.answers?.length > 0 && replyId !== q._id && (
-                                <div className="mt-6 p-4 rounded-lg bg-primary-glow border border-primary border-opacity-20">
-                                    <p className="text-xs font-bold text-primary-light uppercase mb-2">Your Answer:</p>
-                                    <p className="text-sm text-text-secondary">{q.answers[0].answerText}</p>
+                                {/* Card Body */}
+                                <div style={{ padding: '0 24px 24px' }}>
+                                    <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#1f2937', margin: 0 }}>{q.questionText}</p>
                                 </div>
-                            )}
-                        </div>
-                    ))}
+
+                                {/* Card Footer & Actions */}
+                                <div style={{ borderTop: '1px solid #f3f4f6', padding: '16px 24px', background: '#f9fafb', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                    {isAnswered && replyId !== q._id && (
+                                        <div style={{ width: '100%', background: '#ffffff', padding: '16px', borderRadius: '12px', border: '1px solid #e5e5e5', marginBottom: '16px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                <div style={{ fontSize: '11px', color: '#166534', fontWeight: 800, letterSpacing: '0.05em' }}>OFFICIAL RESPONSE</div>
+                                                <div style={{ fontSize: '12px', color: '#9ca3af' }}>{q.answers[0].adminId?.name || 'Admin'}</div>
+                                            </div>
+                                            <p style={{ fontSize: '14px', color: '#4b5563', margin: 0, lineHeight: 1.6 }}>{q.answers[0].answerText}</p>
+                                        </div>
+                                    )}
+
+                                    {replyId === q._id ? (
+                                        <div style={{ width: '100%' }} className="animate-fadeIn">
+                                            <UvTextarea 
+                                                placeholder="Type your official response here..."
+                                                rows="3"
+                                                value={replyText}
+                                                onChange={(e) => setReplyText(e.target.value)}
+                                            />
+                                            <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '12px', marginTop: '16px' }}>
+                                                <button 
+                                                    style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#ea580c', color: 'white', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
+                                                    onClick={() => handleAction(q._id, 'post', { answerText: replyText })}
+                                                    disabled={!replyText.trim() || submitting}
+                                                >
+                                                    {submitting ? 'POSTING...' : 'Submit Reply'}
+                                                </button>
+                                                <button 
+                                                    style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#ffffff', color: '#4b5563', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
+                                                    onClick={() => setReplyId(null)}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <button 
+                                                style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#ffffff', color: '#4b5563', fontWeight: 700, cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                                onClick={() => setReplyId(q._id)}
+                                            >
+                                                ↩ {isAnswered ? 'Edit Reply' : 'Reply'}
+                                            </button>
+                                            {!q.isApproved && (
+                                                <button 
+                                                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#ea580c', color: 'white', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
+                                                    onClick={() => handleAction(q._id, 'patch', { isApproved: true, isFlagged: false })}
+                                                >
+                                                    Approve & Publish
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>

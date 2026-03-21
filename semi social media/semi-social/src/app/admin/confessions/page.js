@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import styles from './admin.module.css';
+import { UvPanel, UvBadge, UvTag, UvButton } from '@/components/UvComponents';
 
 export default function ConfessionReviewPage() {
     const { authFetch } = useAuth();
     const [confessions, setConfessions] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('pending'); // pending, approved, rejected
+    const [filter, setFilter] = useState('pending'); // pending, approved
 
     const fetchConfessions = useCallback(async () => {
         setLoading(true);
@@ -38,51 +38,50 @@ export default function ConfessionReviewPage() {
     };
 
     return (
-        <div className="animate-fadeIn">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold mb-2">Confession Review</h1>
-                    <p className="text-muted">Review student confessions before they go public. AI score helps identify risky content.</p>
-                </div>
-                <div className="tab-nav">
-                    <button className={`tab-item ${filter === 'pending' ? 'active' : ''}`} onClick={() => setFilter('pending')}>Pending</button>
-                    <button className={`tab-item ${filter === 'approved' ? 'active' : ''}`} onClick={() => setFilter('approved')}>Approved</button>
+        <div className="uv-page">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <UvButton variant={filter === 'pending' ? 'primary' : 'outline'} style={{ padding: '8px 16px', fontSize: '13px' }} onClick={() => setFilter('pending')}>PENDING APPROVAL</UvButton>
+                    <UvButton variant={filter === 'approved' ? 'primary' : 'outline'} style={{ padding: '8px 16px', fontSize: '13px' }} onClick={() => setFilter('approved')}>LIVE FEED</UvButton>
                 </div>
             </div>
 
             {loading ? (
-                <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-                    {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="card skeleton h-40"></div>)}
-                </div>
+                <div className="uv-mono-sm" style={{ padding: '40px 0' }}>SCREENING ANONYMOUS INBOX...</div>
             ) : confessions.length === 0 ? (
-                <div className="empty-state">
-                    <div className="empty-icon">🤫</div>
-                    <div className="empty-title">Inbox is empty</div>
-                    <p className="empty-desc">No confessions current in this category.</p>
+                <div className="uv-panel" style={{ padding: '60px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '20px' }}>🤫</div>
+                    <h2 style={{ fontFamily: 'var(--uv-font-heading)', marginBottom: '12px' }}>Inbox Empty</h2>
+                    <p className="uv-muted">No confessions in this category require action.</p>
                 </div>
             ) : (
-                <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px', alignItems: 'start' }}>
                     {confessions.map((c) => (
-                        <div key={c._id} className="card break-inside-avoid flex flex-col gap-4 border-l-4 border-l-accent-violet">
-                            <div className="flex justify-between items-start">
-                                <span className="badge badge-primary text-[10px]"># Confession</span>
-                                <span className="text-[10px] text-muted font-bold">SPAM: {(c.aiSpamScore * 100).toFixed(0)}%</span>
+                        <UvPanel 
+                            key={c._id} 
+                            title={<UvTag color="purple">CONFESSION</UvTag>}
+                            headerActions={<div className="uv-mono-xs" style={{ color: 'var(--uv-muted)' }}>ID: {c._id.slice(-6).toUpperCase()}</div>}
+                        >
+                            <div style={{ marginBottom: '24px', minHeight: '100px' }}>
+                                <p style={{ fontSize: '1.05rem', lineHeight: '1.6', color: '#1a1a1a', fontStyle: 'italic' }}>"{c.confessionText}"</p>
                             </div>
 
-                            <p className="text-sm italic text-text-primary">"{c.confessionText}"</p>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                <div className="uv-mono-xs" style={{ fontWeight: 600 }}>SPAM PROBABILITY:</div>
+                                <UvBadge status={c.aiSpamScore > 0.6 ? 'pending' : 'answered'}>{(c.aiSpamScore * 100).toFixed(0)}%</UvBadge>
+                            </div>
 
-                            <div className="pt-3 border-t border-subtle flex justify-between items-center">
-                                <div className="flex gap-2">
-                                    {!c.isApproved && (
-                                        <button className="btn btn-success btn-xs" onClick={() => handleAction(c._id, 'approve')}>Approve</button>
-                                    )}
-                                    {c.isApproved && (
-                                        <button className="btn btn-warning btn-xs" onClick={() => handleAction(c._id, 'reject')}>Reject</button>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--uv-border)', paddingTop: '16px' }}>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    {!c.isApproved ? (
+                                        <UvButton variant="primary" style={{ padding: '6px 12px', fontSize: '11px' }} onClick={() => handleAction(c._id, 'approve')}>APPROVE</UvButton>
+                                    ) : (
+                                        <UvButton variant="outline" style={{ padding: '6px 12px', fontSize: '11px', color: 'var(--uv-primary)' }} onClick={() => handleAction(c._id, 'reject')}>REJECT</UvButton>
                                     )}
                                 </div>
-                                <button className="btn btn-danger btn-xs" onClick={() => handleAction(c._id, 'delete')}>Delete</button>
+                                <UvButton variant="outline" style={{ padding: '6px 12px', fontSize: '11px', color: '#d00' }} onClick={() => handleAction(c._id, 'delete')}>DELETE</UvButton>
                             </div>
-                        </div>
+                        </UvPanel>
                     ))}
                 </div>
             )}

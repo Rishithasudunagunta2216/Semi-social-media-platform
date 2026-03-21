@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import styles from './admin.module.css';
+import { UvPanel, UvBadge, UvTag, UvButton } from '@/components/UvComponents';
 
 export default function AdminDashboard() {
     const { authFetch } = useAuth();
@@ -29,107 +29,111 @@ export default function AdminDashboard() {
     }, [authFetch]);
 
     if (loading) {
-        return <div className="animate-pulse">Loading dashboard metrics...</div>;
+        return (
+            <div className="uv-page" style={{ padding: '40px 0' }}>
+                <div className="uv-mono-sm">FETCHING METRICS...</div>
+            </div>
+        );
     }
 
     return (
-        <div className="animate-fadeIn">
-            <h1 className="text-3xl font-bold mb-8">System Overview</h1>
-
-            <div className="grid-stats">
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ background: 'var(--primary-glow)', color: 'var(--primary-light)' }}>👥</div>
-                    <div className="stat-value">{stats?.totalStudents || 0}</div>
-                    <div className="stat-label">Total Students</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ background: 'rgba(244, 63, 94, 0.1)', color: 'var(--accent-rose)' }}>🛡️</div>
-                    <div className="stat-value">{stats?.flaggedQuestions || 0}</div>
-                    <div className="stat-label">Flagged Doubts</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--accent-amber)' }}>🤫</div>
-                    <div className="stat-value">{stats?.pendingConfessions || 0}</div>
-                    <div className="stat-label">Pending Confessions</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-emerald)' }}>📄</div>
-                    <div className="stat-value">{stats?.totalPosts || 0}</div>
-                    <div className="stat-label">Active Posts</div>
-                </div>
+        <div className="uv-page">
+            {/* STAT GRID */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+                {[
+                    { label: 'Enrolled Students', value: stats?.totalStudents || 0, icon: '👥', color: 'orange' },
+                    { label: 'Flagged Doubts', value: stats?.flaggedQuestions || 0, icon: '🛡️', color: 'purple' },
+                    { label: 'Pending Confessions', value: stats?.pendingConfessions || 0, icon: 'blue', color: 'blue' },
+                    { label: 'Published Updates', value: stats?.totalPosts || 0, icon: '📄', color: 'green' }
+                ].map((stat, i) => (
+                    <div key={i} className="uv-panel" style={{ margin: 0, padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                            <div style={{ fontSize: '24px' }}>{typeof stat.icon === 'string' && stat.icon.length > 2 ? '📄' : stat.icon}</div>
+                            <UvTag color={stat.color}>{stat.label.split(' ')[0]}</UvTag>
+                        </div>
+                        <div style={{ fontSize: '32px', fontWeight: 800, fontFamily: 'var(--uv-font-heading)' }}>{stat.value}</div>
+                        <div className="uv-mono-xs" style={{ color: 'var(--uv-muted)', marginTop: '4px' }}>{stat.label.toUpperCase()}</div>
+                    </div>
+                ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
-                <div className="card border border-subtle">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-bold">AI Moderation Alerts</h3>
-                        <span className="badge badge-danger">Urgent</span>
-                    </div>
-
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '32px' }}>
+                {/* MODERATION QUEUE */}
+                <UvPanel title="Moderation Alerts" headerActions={<UvBadge status="pending">LIVE</UvBadge>}>
                     {recentFlagged.length === 0 ? (
-                        <div className="py-10 text-center text-muted text-sm">
-                            All good! No questions currently flagged by AI.
+                        <div style={{ padding: '40px 0', textAlign: 'center' }}>
+                            <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
+                            <p className="uv-muted">No questions flagged for review.</p>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-4">
-                            {recentFlagged.map((q) => (
-                                <div key={q._id} className="p-4 rounded-lg bg-bg-secondary border border-subtle hover:border-accent-rose transition-colors">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <span className="text-xs font-bold text-accent-rose">SPAM SCORE: {(q.aiSpamScore * 100).toFixed(0)}%</span>
-                                        <span className="text-[10px] text-muted">{new Date(q.createdAt).toLocaleTimeString()}</span>
-                                    </div>
-                                    <p className="text-sm line-clamp-2 mb-3">"{q.questionText}"</p>
-                                    <div className="flex gap-2">
-                                        <button className="btn btn-secondary btn-xs">Review</button>
-                                        <button className="btn btn-danger btn-xs">Block User</button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        <table className="uv-table">
+                            <thead>
+                                <tr>
+                                    <th>Source</th>
+                                    <th>Content Snippet</th>
+                                    <th>Score</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {recentFlagged.map((q) => (
+                                    <tr key={q._id}>
+                                        <td className="uv-mono-xs">{new Date(q.createdAt).toLocaleTimeString()}</td>
+                                        <td style={{ maxWidth: '200px' }} className="truncate">{q.questionText}</td>
+                                        <td>
+                                            <UvBadge status="pending">{(q.aiSpamScore * 100).toFixed(0)}% SPAM</UvBadge>
+                                        </td>
+                                        <td style={{ textAlign: 'right' }}>
+                                            <UvButton variant="outline" style={{ padding: '6px 12px', fontSize: '12px' }}>REVIEW</UvButton>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     )}
-                </div>
+                </UvPanel>
 
-                <div className="card border border-subtle">
-                    <h3 className="text-lg font-bold mb-6">System Controls</h3>
-                    <div className="flex flex-col gap-6">
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-bg-secondary">
+                {/* SYSTEM CONTROLS */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <UvPanel title="Platform Safety">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                             <div>
-                                <p className="font-semibold">Confession Mode</p>
-                                <p className="text-xs text-muted">Enable/Disable student confessions submission.</p>
+                                <div style={{ fontWeight: 600 }}>Confession Mode</div>
+                                <div className="uv-mono-xs" style={{ color: 'var(--uv-muted)' }}>FRIDAY ANONYMOUS MODULE</div>
                             </div>
-                            <div
-                                className={`toggle ${stats?.confessionModeEnabled ? 'active' : ''}`}
+                            <UvButton 
+                                variant={stats?.confessionModeEnabled ? 'primary' : 'outline'}
+                                style={{ padding: '8px 16px', fontSize: '12px' }}
                                 onClick={async () => {
-                                    try {
-                                        const newVal = !stats.confessionModeEnabled;
-                                        await authFetch('/api/admin/settings', {
-                                            method: 'PATCH',
-                                            body: JSON.stringify({ confessionMode: newVal }),
-                                        });
-                                        setStats({ ...stats, confessionModeEnabled: newVal });
-                                    } catch (e) { }
+                                    const newVal = !stats.confessionModeEnabled;
+                                    await authFetch('/api/admin/settings', {
+                                        method: 'PATCH',
+                                        body: JSON.stringify({ confessionMode: newVal }),
+                                    });
+                                    setStats({ ...stats, confessionModeEnabled: newVal });
                                 }}
-                            ></div>
+                            >
+                                {stats?.confessionModeEnabled ? 'ENABLED' : 'DISABLED'}
+                            </UvButton>
                         </div>
 
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-bg-secondary">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
-                                <p className="font-semibold">Site Registration</p>
-                                <p className="text-xs text-muted">Close registration to new students.</p>
+                                <div style={{ fontWeight: 600 }}>Open Registration</div>
+                                <div className="uv-mono-xs" style={{ color: 'var(--uv-muted)' }}>NEW STUDENT ACCESS</div>
                             </div>
-                            <div className="toggle active"></div>
+                            <UvButton variant="primary" style={{ padding: '8px 16px', fontSize: '12px' }}>ACTIVE</UvButton>
                         </div>
+                    </UvPanel>
 
-                        <div className="mt-4">
-                            <h4 className="text-sm font-bold text-muted uppercase mb-3">Quick Actions</h4>
-                            <div className="grid grid-cols-2 gap-3">
-                                <button className="btn btn-secondary text-sm">Post Update</button>
-                                <button className="btn btn-secondary text-sm">Upload Material</button>
-                                <button className="btn btn-secondary text-sm">Broadcast Email</button>
-                                <button className="btn btn-secondary text-sm">Audit Log</button>
-                            </div>
+                    <UvPanel title="Quick Actions">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <UvButton variant="outline" style={{ fontSize: '11px', padding: '10px' }}>📢 POST UPDATE</UvButton>
+                            <UvButton variant="outline" style={{ fontSize: '11px', padding: '10px' }}>📚 UPLOAD DOC</UvButton>
+                            <UvButton variant="outline" style={{ fontSize: '11px', padding: '10px' }}>✉️ EMAIL LIST</UvButton>
+                            <UvButton variant="outline" style={{ fontSize: '11px', padding: '10px' }}>🔍 AUDIT LOGS</UvButton>
                         </div>
-                    </div>
+                    </UvPanel>
                 </div>
             </div>
         </div>

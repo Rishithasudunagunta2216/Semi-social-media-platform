@@ -8,8 +8,7 @@ const QuestionSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        enum: ['doubts-about-faculty', 'general'],
-        default: 'doubts-about-faculty',
+        default: 'Academics',
     },
     questionText: {
         type: String,

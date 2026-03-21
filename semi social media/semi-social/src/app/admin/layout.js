@@ -4,121 +4,200 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import styles from '../dashboard/dashboard.module.css';
+import { UvBadge } from '@/components/UvComponents';
 
 const adminNavItems = [
-    { href: '/admin', label: 'Dashboard', icon: '📊' },
-    { href: '/admin/questions', label: 'Moderation', icon: '🛡️' },
-    { href: '/admin/posts', label: 'Content Management', icon: '✍️' },
-    { href: '/admin/confessions', label: 'Review Confessions', icon: '🤫' },
-    { href: '/admin/users', label: 'User Control', icon: '👥' },
-    { href: '/admin/settings', label: 'System Settings', icon: '⚙️' },
+    { href: '/admin', label: 'Dashboard', icon: '🏠' },
+    { href: '/admin/questions', label: 'Student Doubts', icon: '💬' },
+    { href: '/admin/posts', label: 'Daily Updates', icon: '📢' },
+    { href: '/admin/confessions', label: 'Confessions', icon: '🤫' },
+    { href: '/admin/users', label: 'Students', icon: '👥' },
+    { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
 ];
 
 export default function AdminLayout({ children }) {
     const { user, loading, logout, isAdmin } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
-    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
-        if (!loading && !user) {
-            router.replace('/login');
-        }
-        if (!loading && user && user.role !== 'admin') {
-            router.replace('/dashboard');
-        }
+        if (!loading && !user) router.replace('/login');
+        if (!loading && user && user.role !== 'admin') router.replace('/dashboard');
     }, [user, loading, router]);
 
     if (loading || !user || user.role !== 'admin') {
         return (
-            <div className={styles.loadingScreen}>
-                <div className={styles.spinner}></div>
+            <div className="uv-page" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="uv-mono-sm">LOADING ASSETS...</div>
             </div>
         );
     }
 
     return (
-        <div className={styles.dashLayout}>
-            {/* Mobile overlay */}
-            {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebarOpen(false)}></div>}
-
-            {/* Sidebar */}
-            <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`} style={{ borderRightColor: 'var(--accent-rose)', borderRightWidth: '2px' }}>
-                <div className={styles.sidebarHeader}>
-                    <Link href="/admin" className={styles.logo}>
-                        <div className={styles.logoIcon} style={{ background: 'linear-gradient(135deg, var(--accent-rose) 0%, #dc2626 100%)' }}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                            </svg>
-                        </div>
-                        <span className={styles.logoText}>Admin Panel</span>
-                    </Link>
+        <div className="univera-shell">
+            {/* BLOCK 01 — SIDEBAR */}
+            <aside className="uv-sidebar">
+                <div className="uv-sidebar-brand">
+                    <div className="uv-logo-mark">U</div>
+                    <span className="uv-wordmark">Univer<span>a</span></span>
                 </div>
 
-                <nav className={styles.sidebarNav}>
+                <nav className="uv-sidebar-nav">
+                    <div className="uv-nav-section">ADMINISTRATION</div>
                     {adminNavItems.map((item) => (
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`${styles.navItem} ${pathname === item.href ? styles.navItemActive : ''}`}
-                            style={pathname === item.href ? { backgroundColor: 'rgba(244, 63, 94, 0.1)', color: 'var(--accent-rose)' } : {}}
-                            onClick={() => setSidebarOpen(false)}
+                            className={`uv-nav-item ${pathname === item.href ? 'active' : ''}`}
                         >
-                            <span className={styles.navIcon}>{item.icon}</span>
-                            <span className={styles.navLabel}>{item.label}</span>
+                            <span style={{ fontSize: '18px' }}>{item.icon}</span>
+                            <span>{item.label}</span>
+                            {item.label === 'Student Doubts' && (
+                                <div style={{ marginLeft: 'auto', background: '#3b82f6', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700 }}>2</div>
+                            )}
                         </Link>
                     ))}
                 </nav>
 
-                <div className={styles.sidebarFooter}>
-                    <div className={styles.userInfo}>
-                        <div className={styles.userAvatar} style={{ background: 'var(--accent-rose)' }}>
-                            A
-                        </div>
-                        <div className={styles.userMeta}>
-                            <span className={styles.userName}>{user.name}</span>
-                            <span className={styles.userRole}>Super Admin</span>
+                <div className="uv-sidebar-footer">
+                    <div className="uv-user-chip">
+                        <div className="uv-avatar">{user.name?.charAt(0) || 'A'}</div>
+                        <div className="uv-user-info">
+                            <div style={{ fontWeight: 600, fontSize: '14px', color: '#111827' }}>{user.name}</div>
+                            <div className="uv-user-role">Super Admin</div>
                         </div>
                     </div>
-                    <button className={styles.logoutBtn} onClick={logout} title="Logout">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                            <polyline points="16 17 21 12 16 7" />
-                            <line x1="21" y1="12" x2="9" y2="12" />
-                        </svg>
+                    <button 
+                        onClick={logout} 
+                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)' }}
+                    >
+                        🚪
                     </button>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <div className={styles.mainWrapper}>
-                {/* Top Bar */}
-                <header className={styles.topbar}>
-                    <button className={styles.menuBtn} onClick={() => setSidebarOpen(!sidebarOpen)}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <line x1="3" y1="12" x2="21" y2="12" />
-                            <line x1="3" y1="6" x2="21" y2="6" />
-                            <line x1="3" y1="18" x2="21" y2="18" />
-                        </svg>
-                    </button>
-                    <div className={styles.topbarTitle}>
-                        {adminNavItems.find(item => item.href === pathname)?.label || 'Admin Management'}
-                    </div>
-                    <div className={styles.topbarRight}>
-                        <div className="flex items-center gap-4">
-                            <span className="badge badge-danger">Live Moderation Active</span>
-                            <Link href="/dashboard" target="_blank" className="btn btn-secondary btn-sm">
-                                View Site ↗
-                            </Link>
-                        </div>
-                    </div>
+            <main className="univera-main">
+                {/* Internal Page Header (Automated) */}
+                <header className="uv-page-header">
+                    <div className="uv-mono-xs" style={{ color: 'var(--uv-primary)', marginBottom: '4px', fontWeight: 600 }}>ADMIN COMMAND CENTRE</div>
+                    <h1>{adminNavItems.find(item => item.href === pathname)?.label || 'System'}</h1>
                 </header>
 
-                <main className={styles.mainContent}>
+                <div className="uv-page">
                     {children}
-                </main>
-            </div>
+                </div>
+            </main>
+
+            <style jsx>{`
+                .univera-shell {
+                    display: flex;
+                    min-height: 100vh;
+                    background: #f5f4ef;
+                }
+                .uv-sidebar {
+                    width: 260px;
+                    background: #ffffff;
+                    border-right: 1px solid #e5e5e5;
+                    height: 100vh;
+                    position: sticky;
+                    top: 0;
+                    display: flex;
+                    flex-direction: column;
+                    padding: 32px 0;
+                    color: #111827;
+                    flex-shrink: 0;
+                }
+                .uv-sidebar-brand {
+                    padding: 0 24px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    margin-bottom: 48px;
+                }
+                .uv-logo-mark {
+                    width: 36px;
+                    height: 36px;
+                    background: #ea580c;
+                    border-radius: 9px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-family: var(--uv-font-heading);
+                    font-weight: 900;
+                    font-size: 20px;
+                    color: white;
+                }
+                .uv-wordmark {
+                    font-family: var(--uv-font-heading);
+                    font-size: 24px;
+                    font-weight: 900;
+                }
+                .uv-wordmark span { color: #ea580c; }
+                .uv-sidebar-nav { flex: 1; padding: 0 12px; }
+                .uv-nav-section {
+                    padding: 0 12px;
+                    margin: 24px 0 12px 0;
+                    font-size: 11px;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    color: #9ca3af;
+                    font-family: system-ui, -apple-system, sans-serif;
+                    letter-spacing: 0.1em;
+                }
+                .uv-nav-item {
+                    display: flex;
+                    align-items: center;
+                    padding: 12px;
+                    color: #4b5563;
+                    text-decoration: none;
+                    font-size: 14px;
+                    font-weight: 600;
+                    border-radius: 8px;
+                    gap: 12px;
+                    transition: 0.2s;
+                    margin-bottom: 4px;
+                    border: 1px solid transparent;
+                }
+                .uv-nav-item:hover { background: #f9fafb; color: #111827; }
+                .uv-nav-item.active { background: #ffedd5; color: #c2410c; border: 1px solid #ea580c; font-weight: 700; }
+                .uv-sidebar-footer {
+                    padding: 24px 16px;
+                    border-top: 1px solid #e5e5e5;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+                .uv-user-chip { display: flex; align-items: center; gap: 10px; }
+                .uv-avatar {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    background: #ea580c;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 700;
+                    color: white;
+                    font-size: 14px;
+                }
+                .uv-user-role { font-size: 11px; color: #6b7280; font-weight: 600; }
+                .univera-main {
+                    flex: 1;
+                    padding: 36px 40px;
+                    overflow-y: auto;
+                }
+                .uv-page-header {
+                    margin-bottom: 32px;
+                }
+                .uv-page-header h1 {
+                    font-family: var(--uv-font-heading);
+                    font-size: 32px;
+                    font-weight: 900;
+                    color: #111827;
+                    margin: 0;
+                }
+            `}</style>
         </div>
     );
 }

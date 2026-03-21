@@ -3,7 +3,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import styles from './page.module.css';
+import { UvButton, UvTag } from '@/components/UvComponents';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -22,125 +22,149 @@ export default function Home() {
 
   if (!mounted || loading) {
     return (
-      <div className={styles.loadingScreen}>
-        <div className={styles.spinner}></div>
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--uv-page-bg)' }}>
+        <div className="uv-mono-sm">INITIALIZING UNIVERA...</div>
       </div>
     );
   }
 
   return (
-    <main className={styles.landing}>
-      {/* Animated Background */}
-      <div className={styles.bgGradient}>
-        <div className={styles.orb1}></div>
-        <div className={styles.orb2}></div>
-        <div className={styles.orb3}></div>
-      </div>
+    <main style={{ minHeight: '100vh', background: 'var(--uv-page-bg)', color: '#1a1a1a', overflowX: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      {/* NAVIGATION */}
+      <nav style={{ padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', boxSizing: 'border-box' }}>
+        <div style={{ fontFamily: 'var(--uv-font-heading)', fontSize: '24px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '32px', height: '32px', background: 'var(--uv-primary)', borderRadius: '8px' }}></div>
+          UNIVERA
+        </div>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button 
+            className="header-btn-light"
+            onClick={() => router.push('/login')}
+          >
+            LOG IN
+          </button>
+          <button 
+            className="header-btn-primary"
+            onClick={() => router.push('/register')}
+          >
+            GET STARTED
+          </button>
+        </div>
+      </nav>
 
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.logo}>
-          <div className={styles.logoIcon}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-              <path d="M6 12v5c3 3 9 3 12 0v-5" />
-            </svg>
+      {/* HERO SECTION */}
+      <section style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 40px', boxSizing: 'border-box' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ 
+            display: 'inline-block', 
+            padding: '6px 16px', 
+            background: '#ffedd5', 
+            color: '#ea580c', 
+            fontSize: '11px', 
+            fontWeight: 800, 
+            letterSpacing: '0.1em', 
+            borderRadius: '20px',
+            textTransform: 'uppercase'
+          }}>
+            UNIVERSITY EXCLUSIVE
           </div>
-          <span className={styles.logoText}>CampusConnect</span>
         </div>
-        <nav className={styles.navLinks}>
-          <button className="btn btn-secondary btn-sm" onClick={() => router.push('/login')}>
-            Sign In
-          </button>
-          <button className="btn btn-primary btn-sm" onClick={() => router.push('/register')}>
-            Get Started
-          </button>
-        </nav>
-      </header>
-
-      {/* Hero */}
-      <section className={styles.hero}>
-        <div className={styles.heroBadge}>
-          <span className={styles.heroBadgeDot}></span>
-          University Exclusive Platform
-        </div>
-        <h1 className={styles.heroTitle}>
+        <h1 style={{ fontFamily: 'var(--uv-font-heading)', fontSize: 'clamp(3rem, 8vw, 6rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.04em', margin: '0 0 32px' }}>
           Your Campus,<br />
-          <span className={styles.heroGradient}>Connected.</span>
+          <span style={{ color: 'var(--uv-primary)' }}>Reimagined.</span>
         </h1>
-        <p className={styles.heroSubtitle}>
-          A structured, AI-moderated platform where students ask questions,
-          access resources, and stay updated — all in one place.
+        <p style={{ maxWidth: '600px', fontSize: '18px', lineHeight: 1.6, color: 'var(--uv-muted)', margin: '0 0 48px' }}>
+          A premium, AI-moderated ecosystem for the modern student. Ask questions, access resources, and stay connected with your university community.
         </p>
-        <div className={styles.heroActions}>
-          <button className="btn btn-primary btn-lg" onClick={() => router.push('/register')}>
-            Join as Student
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button 
+            className="hero-btn-primary"
+            onClick={() => router.push('/register')}
+          >
+            JOIN THE COMMUNITY
           </button>
-          <button className="btn btn-secondary btn-lg" onClick={() => router.push('/login')}>
-            Admin Login
+          <button 
+            className="hero-btn-light"
+            onClick={() => router.push('/login?role=admin')}
+          >
+            ADMIN ACCESS
           </button>
         </div>
       </section>
 
-      {/* Features */}
-      <section className={styles.features}>
-        <div className={styles.featuresGrid}>
-          {[
-            {
-              icon: '💬',
-              title: 'Ask Questions',
-              desc: 'Post your doubts about faculty and courses. Get official answers from the admin team.',
-              color: 'var(--primary)',
-            },
-            {
-              icon: '🎉',
-              title: 'Fest Updates',
-              desc: 'Stay in the loop with all college fest announcements, schedules, and highlights.',
-              color: 'var(--accent-amber)',
-            },
-            {
-              icon: '📚',
-              title: 'Resources Hub',
-              desc: 'Access previous year papers, study materials, and important documents.',
-              color: 'var(--accent-emerald)',
-            },
-            {
-              icon: '📢',
-              title: 'Daily Updates',
-              desc: 'Get college and regional updates delivered fresh every day.',
-              color: 'var(--accent-cyan)',
-            },
-            {
-              icon: '🤫',
-              title: 'Confessions',
-              desc: 'Share anonymous confessions on Fridays. Admin-reviewed for a safe space.',
-              color: 'var(--accent-violet)',
-            },
-            {
-              icon: '🤖',
-              title: 'AI Moderation',
-              desc: 'Smart content analysis keeps the community clean and spam-free.',
-              color: 'var(--accent-rose)',
-            },
-          ].map((feature, i) => (
-            <div key={i} className={styles.featureCard} style={{ animationDelay: `${i * 0.1}s` }}>
-              <div className={styles.featureIcon} style={{ background: `${feature.color}20`, color: feature.color }}>
-                {feature.icon}
-              </div>
-              <h3 className={styles.featureTitle}>{feature.title}</h3>
-              <p className={styles.featureDesc}>{feature.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <style jsx>{`
+        button {
+          transition: all 0.2s ease;
+          border-radius: 8px;
+          cursor: pointer;
+        }
+        
+        button:hover {
+          transform: translateY(-2px);
+        }
 
-      {/* Footer */}
-      <footer className={styles.footer}>
-        <p>© 2026 CampusConnect. Built for university communities.</p>
-      </footer>
+        button:active {
+          transform: translateY(0);
+        }
+
+        /* Outline / Light Buttons */
+        .header-btn-light {
+          padding: 10px 20px;
+          font-size: 12px;
+          font-weight: 700;
+          background: #f9f9f9;
+          color: #1a1a1a;
+          border: 1px solid #e5e5e5;
+        }
+
+        .header-btn-light:hover {
+          background: #f0f0f0;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .hero-btn-light {
+          padding: 16px 40px;
+          font-size: 14px;
+          font-weight: 700;
+          background: #f9f9f9;
+          color: #1a1a1a;
+          border: 1px solid #e5e5e5;
+        }
+
+        .hero-btn-light:hover {
+          background: #f0f0f0;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Primary Solid Action Buttons */
+        .header-btn-primary {
+          padding: 10px 24px;
+          font-size: 12px;
+          font-weight: 700;
+          background: var(--uv-primary);
+          color: white;
+          border: none;
+        }
+
+        .header-btn-primary:hover {
+          background: #d83a06; /* slightly darker orange */
+          box-shadow: 0 4px 16px rgba(232, 67, 10, 0.25);
+        }
+
+        .hero-btn-primary {
+          padding: 16px 40px;
+          font-size: 14px;
+          font-weight: 700;
+          background: var(--uv-primary);
+          color: white;
+          border: none;
+        }
+
+        .hero-btn-primary:hover {
+          background: #d83a06;
+          box-shadow: 0 4px 16px rgba(232, 67, 10, 0.25);
+        }
+      `}</style>
     </main>
   );
 }

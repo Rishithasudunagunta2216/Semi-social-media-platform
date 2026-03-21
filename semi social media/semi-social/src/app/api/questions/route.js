@@ -19,10 +19,13 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '20');
-        const category = searchParams.get('category') || 'doubts-about-faculty';
+        const category = searchParams.get('category') || 'all';
         const flaggedOnly = searchParams.get('flagged') === 'true';
 
-        const query = { isDeleted: false, category };
+        const query = { isDeleted: false };
+        if (category !== 'all') {
+            query.category = category;
+        }
 
         // Non-admin users only see approved questions
         if (user.role !== 'admin') {

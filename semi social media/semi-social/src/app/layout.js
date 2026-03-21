@@ -2,9 +2,9 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 
 export const metadata = {
-  title: 'CampusConnect — University Social Hub',
-  description: 'A university-exclusive platform for students and faculty to connect, share updates, and collaborate in a structured, moderated environment.',
-  keywords: 'university, campus, social media, students, faculty, education',
+  title: 'UNIVERA — Premium University Ecosystem',
+  description: 'A high-fidelity university-exclusive platform for synchronized campus communication and academic collaboration.',
+  keywords: 'univera, university, campus, social ecosystem, students, faculty, education',
 };
 
 export default function RootLayout({ children }) {
