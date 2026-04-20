@@ -35,7 +35,7 @@ export async function GET(request) {
             Question.countDocuments({ isApproved: false, isDeleted: false }),
             Post.countDocuments(),
             Confession.countDocuments(),
-            Confession.countDocuments({ isApproved: false, isRejected: false }),
+            Confession.countDocuments({ is_approved: false, is_rejected: false }),
             Setting.findOne({ key: 'confessionMode' }),
         ]);
 

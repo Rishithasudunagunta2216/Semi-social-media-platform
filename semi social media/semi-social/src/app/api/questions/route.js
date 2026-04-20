@@ -105,23 +105,23 @@ export async function POST(request) {
         }
 
         // AI moderation analysis
-        const analysis = analyzeContent(questionText);
+        const analysis = await analyzeContent(questionText);
 
         const question = await Question.create({
             studentId: user.userId,
             questionText: questionText.trim(),
             category: category || 'doubts-about-faculty',
-            aiSpamScore: analysis.spamScore,
+            spamScore: analysis.spamScore,
+            aiReason: analysis.reasoning,
             aiAnalysis: {
                 isSpam: analysis.isSpam,
                 isOffensive: analysis.isOffensive,
                 isHarassment: analysis.isHarassment,
                 isIrrelevant: analysis.isIrrelevant,
                 suggestedAction: analysis.suggestedAction,
-                reasoning: analysis.reasoning,
             },
-            isFlagged: analysis.spamScore >= 0.4,
-            isApproved: analysis.spamScore < 0.5, // Auto-approve clean content
+            isFlagged: analysis.spamScore >= 0.4 || analysis.isOffensive || analysis.isHarassment,
+            isApproved: analysis.spamScore < 0.5 && !analysis.isOffensive && !analysis.isHarassment, // Auto-approve clean content
         });
 
         return NextResponse.json({

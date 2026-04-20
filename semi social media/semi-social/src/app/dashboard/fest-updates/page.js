@@ -13,19 +13,43 @@ export default function FestUpdatesPage() {
     const fetchPosts = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await authFetch('/api/posts?category=fest-updates');
-            const data = await res.json();
-            if (res.ok) {
-                setPosts(data.posts);
-            } else {
-                setError(data.error || 'Failed to fetch updates');
-            }
+            // Simulated network delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const DUMMY_FEST_UPDATES = [
+                {
+                    _id: 'fest1',
+                    title: 'Spring Fest 2026 Headliner Announced!',
+                    content: 'We are thrilled to announce that the headliner for Spring Fest 2026 will be none other than The Midnight! Get ready for an electrifying night of synthwave. Tickets go on sale next week.',
+                    category: 'fest-updates',
+                    isPinned: true,
+                    createdAt: new Date(Date.now() - 86400000).toISOString()
+                },
+                {
+                    _id: 'fest2',
+                    title: 'Hackathon Registration Now Open',
+                    content: 'The annual 48-hour campus hackathon is back! Form a team of up to 4 members and build something amazing. First prize is $5000. Check your campus email for registration details.',
+                    category: 'fest-updates',
+                    isPinned: false,
+                    createdAt: new Date(Date.now() - 86400000 * 3).toISOString()
+                },
+                {
+                    _id: 'fest3',
+                    title: 'Call for Volunteers: Cultural Night',
+                    content: 'We need enthusiastic volunteers to help organize and manage the upcoming Cultural Night. Roles available in stage management, hospitality, and crowd control. Add it to your resume!',
+                    category: 'fest-updates',
+                    isPinned: false,
+                    createdAt: new Date(Date.now() - 86400000 * 5).toISOString()
+                }
+            ];
+            
+            setPosts(DUMMY_FEST_UPDATES);
         } catch (err) {
             setError('Network error');
         } finally {
             setLoading(false);
         }
-    }, [authFetch]);
+    }, []);
 
     useEffect(() => {
         fetchPosts();

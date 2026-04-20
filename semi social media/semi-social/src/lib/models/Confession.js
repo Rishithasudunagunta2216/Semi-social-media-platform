@@ -6,36 +6,45 @@ const ConfessionSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
-    confessionText: {
+    // The intended recipient's email (for private targeted confessions)
+    target_student_email: {
+        type: String,
+        lowercase: true,
+        trim: true,
+        index: true,
+        default: null,
+    },
+    // Using snake_case as requested by user for these fields
+    confession_text: {
         type: String,
         required: [true, 'Confession text is required'],
         maxlength: [3000, 'Confession cannot exceed 3000 characters'],
     },
-    isApproved: {
+    is_approved: {
+        type: Boolean,
+        default: false,
+        index: true,
+    },
+    is_anonymous: {
+        type: Boolean,
+        default: true,
+    },
+    is_rejected: {
         type: Boolean,
         default: false,
     },
-    isRejected: {
-        type: Boolean,
-        default: false,
-    },
+    // Keeping AI fields for backend moderation consistency
     aiSpamScore: {
         type: Number,
         default: 0,
-        min: 0,
-        max: 1,
-    },
-    aiAnalysis: {
-        isSpam: { type: Boolean, default: false },
-        isOffensive: { type: Boolean, default: false },
-        suggestedAction: {
-            type: String,
-            enum: ['approve', 'review', 'block_user'],
-            default: 'approve',
-        },
     },
 }, {
     timestamps: true,
+});
+
+// Virtual for created_at as requested
+ConfessionSchema.virtual('created_at').get(function() {
+    return this.createdAt;
 });
 
 export default mongoose.models.Confession || mongoose.model('Confession', ConfessionSchema);

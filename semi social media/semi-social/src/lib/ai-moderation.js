@@ -70,7 +70,7 @@ function analyzeSpecialChars(text) {
     return 0;
 }
 
-export function analyzeContent(text) {
+export async function analyzeContentFallback(text) {
     if (!text || typeof text !== 'string') {
         return {
             spamScore: 0,
@@ -146,7 +146,6 @@ export function analyzeContent(text) {
     spamScore = Math.min(spamScore, 1);
     spamScore = Math.round(spamScore * 100) / 100;
 
-    // Determine suggested action
     let suggestedAction = 'approve';
     if (spamScore >= 0.7 || isHarassment) {
         suggestedAction = 'block_user';
@@ -165,4 +164,125 @@ export function analyzeContent(text) {
         suggestedAction,
         reasoning: reasons.length > 0 ? reasons.join('. ') : 'Content appears clean',
     };
+}
+
+export async function analyzeContent(text) {
+    if (!text || typeof text !== 'string') {
+        return {
+            spamScore: 0,
+            isSpam: false,
+            isOffensive: false,
+            isHarassment: false,
+            isIrrelevant: false,
+            suggestedAction: 'approve',
+            reasoning: 'No content to analyze',
+        };
+    }
+
+    // Try Gemini API first if key is present
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey) {
+        try {
+            const prompt = `Classify this message as spam, offensive, or normal.
+Analyze the following student submission and provide a JSON response.
+Return exactly and ONLY this JSON format:
+{
+  "spam_score": 0.5,
+  "is_flagged": true,
+  "reason": "explanation",
+  "is_spam": true,
+  "is_offensive": false,
+  "suggested_action": "review"
+}
+
+Message: "${text}"`;
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: prompt }]
+                    }],
+                    generationConfig: {
+                        response_mime_type: "application/json",
+                    }
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const content = data.candidates[0].content.parts[0].text;
+                const result = JSON.parse(content);
+                
+                return {
+                    spamScore: result.spam_score ?? 0,
+                    isSpam: result.is_spam ?? false,
+                    isOffensive: result.is_offensive ?? false,
+                    isHarassment: result.reason?.toLowerCase().includes('harass') || false,
+                    isIrrelevant: result.reason?.toLowerCase().includes('irrelevant') || false,
+                    suggestedAction: result.suggested_action || (result.is_flagged ? 'review' : 'approve'),
+                    reasoning: result.reason || 'Analyzed by Gemini'
+                };
+            }
+        } catch (error) {
+            console.error('Gemini Moderation API failed', error);
+        }
+    }
+
+    // Try OpenAI API if key is present
+    const openAiKey = process.env.OPENAI_API_KEY;
+    if (openAiKey) {
+        try {
+            const prompt = `Classify this message as spam, offensive, or normal.
+Analyze the following student submission and provide a JSON response.
+Return exactly and ONLY this JSON format:
+{
+  "spam_score": 0.5,
+  "is_flagged": true,
+  "reason": "explanation",
+  "is_spam": true,
+  "is_offensive": false,
+  "suggested_action": "review"
+}
+
+Message: "${text}"`;
+
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${openAiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-3.5-turbo',
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.2,
+                    response_format: { type: 'json_object' }
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const result = JSON.parse(data.choices[0].message.content);
+                
+                return {
+                    spamScore: result.spam_score ?? 0,
+                    isSpam: result.is_spam ?? false,
+                    isOffensive: result.is_offensive ?? false,
+                    isHarassment: result.reason?.toLowerCase().includes('harass') || false,
+                    isIrrelevant: result.reason?.toLowerCase().includes('irrelevant') || false,
+                    suggestedAction: result.suggested_action || (result.is_flagged ? 'review' : 'approve'),
+                    reasoning: result.reason || 'Analyzed by OpenAI'
+                };
+            }
+        } catch (error) {
+            console.error('OpenAI Moderation API failed', error);
+        }
+    }
+
+    // Fallback to rule-based
+    return analyzeContentFallback(text);
 }

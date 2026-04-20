@@ -15,12 +15,23 @@ const QuestionSchema = new mongoose.Schema({
         required: [true, 'Question text is required'],
         maxlength: [2000, 'Question cannot exceed 2000 characters'],
     },
-    aiSpamScore: {
+    // AI Moderation Fields
+    spamScore: {
         type: Number,
         default: 0,
         min: 0,
         max: 1,
     },
+    isFlagged: {
+        type: Boolean,
+        default: false,
+        index: true,
+    },
+    aiReason: {
+        type: String,
+        default: '',
+    },
+    // Extended AI analysis detail
     aiAnalysis: {
         isSpam: { type: Boolean, default: false },
         isOffensive: { type: Boolean, default: false },
@@ -31,12 +42,8 @@ const QuestionSchema = new mongoose.Schema({
             enum: ['approve', 'review', 'block_user'],
             default: 'approve',
         },
-        reasoning: { type: String, default: '' },
     },
-    isFlagged: {
-        type: Boolean,
-        default: false,
-    },
+    // Admin moderation status
     isApproved: {
         type: Boolean,
         default: true,

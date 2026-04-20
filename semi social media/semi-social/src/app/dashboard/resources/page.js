@@ -13,15 +13,45 @@ export default function ResourcesPage() {
     const fetchMaterials = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await authFetch('/api/posts?category=previous-year-papers');
-            const data = await res.json();
-            if (res.ok) {
-                setMaterials(data.posts);
-            }
-        } catch (err) { } finally {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const DUMMY_RESOURCES = [
+                {
+                    _id: 'res1',
+                    title: 'Data Structures and Algorithms - Fall 2023 Final',
+                    content: 'Previous year question paper for CS201: Data Structures and Algorithms with solution key included.',
+                    category: 'previous-year-papers',
+                    createdAt: new Date(Date.now() - 86400000 * 30).toISOString()
+                },
+                {
+                    _id: 'res2',
+                    title: 'Operating Systems - Mid Sem 2024',
+                    content: 'Mid semester examination paper for CS301: Operating Systems. Focuses on process synchronization and deadlocks.',
+                    category: 'previous-year-papers',
+                    createdAt: new Date(Date.now() - 86400000 * 15).toISOString()
+                },
+                {
+                    _id: 'res3',
+                    title: 'Database Management Systems - Spring 2024 Final',
+                    content: 'Complete final examination paper for CS302: DBMS covering SQL, Normalization, and Transaction handling.',
+                    category: 'previous-year-papers',
+                    createdAt: new Date(Date.now() - 86400000 * 60).toISOString()
+                },
+                {
+                    _id: 'res4',
+                    title: 'Computer Networks - Lab Manual & Viva Questions',
+                    content: 'A comprehensive collection of lab exercises and frequently asked viva questions for the Computer Networks lab.',
+                    category: 'previous-year-papers',
+                    createdAt: new Date(Date.now() - 86400000 * 10).toISOString()
+                }
+            ];
+            
+            setMaterials(DUMMY_RESOURCES);
+        } catch (err) { 
+        } finally {
             setLoading(false);
         }
-    }, [authFetch]);
+    }, []);
 
     useEffect(() => {
         fetchMaterials();
@@ -64,12 +94,23 @@ export default function ResourcesPage() {
                             </div>
 
                             <div style={{ display: 'flex', gap: '10px', paddingTop: '20px', borderTop: '1px solid var(--uv-border)' }}>
-                                <UvButton variant="primary" style={{ flex: 1, fontSize: '11px', padding: '10px' }}>
+                                <a 
+                                    href={m.fileUrl || "/dummy.pdf"} 
+                                    download={`${m.title.replace(/\s+/g, '_')}.pdf`} 
+                                    className="uv-btn" 
+                                    style={{ flex: 1, fontSize: '11px', padding: '10px', textDecoration: 'none', textAlign: 'center', justifyContent: 'center' }}
+                                >
                                     DOWNLOAD PDF
-                                </UvButton>
-                                <UvButton variant="outline" style={{ flex: 1, fontSize: '11px', padding: '10px' }}>
+                                </a>
+                                <a 
+                                    href={m.fileUrl || "/dummy.pdf"} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="uv-btn uv-btn-outline" 
+                                    style={{ flex: 1, fontSize: '11px', padding: '10px', textDecoration: 'none', textAlign: 'center', justifyContent: 'center' }}
+                                >
                                     VIEW ONLINE
-                                </UvButton>
+                                </a>
                             </div>
                         </UvPanel>
                     ))}

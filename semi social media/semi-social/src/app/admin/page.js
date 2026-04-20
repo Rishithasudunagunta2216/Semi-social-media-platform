@@ -81,10 +81,16 @@ export default function AdminDashboard() {
                                         <td className="uv-mono-xs">{new Date(q.createdAt).toLocaleTimeString()}</td>
                                         <td style={{ maxWidth: '200px' }} className="truncate">{q.questionText}</td>
                                         <td>
-                                            <UvBadge status="pending">{(q.aiSpamScore * 100).toFixed(0)}% SPAM</UvBadge>
+                                            <UvBadge status="pending">{(q.spamScore * 100).toFixed(0)}% SPAM</UvBadge>
                                         </td>
                                         <td style={{ textAlign: 'right' }}>
-                                            <UvButton variant="outline" style={{ padding: '6px 12px', fontSize: '12px' }}>REVIEW</UvButton>
+                                            <UvButton 
+                                                variant="outline" 
+                                                style={{ padding: '6px 12px', fontSize: '12px' }}
+                                                onClick={() => window.location.href = '/admin/questions?filter=flagged'}
+                                            >
+                                                REVIEW
+                                            </UvButton>
                                         </td>
                                     </tr>
                                 ))}

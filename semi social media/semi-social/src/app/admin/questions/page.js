@@ -11,13 +11,27 @@ export default function ModerationPage() {
     const [replyId, setReplyId] = useState(null);
     const [replyText, setReplyText] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const [filter, setFilter] = useState('all'); // all, pending, answered
+    const [filter, setFilter] = useState('all'); // all, pending, answered, flagged
+
+    // Read initial filter from URL if present
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialFilter = urlParams.get('filter');
+            if (initialFilter && ['all', 'pending', 'answered', 'flagged'].includes(initialFilter)) {
+                setFilter(initialFilter);
+            }
+        }
+    }, []);
 
     const fetchQuestions = useCallback(async () => {
         setLoading(true);
         try {
-            // Fetch all questions for admin to see
-            const res = await authFetch('/api/questions?category=all&limit=50');
+            const url = filter === 'flagged' 
+                ? '/api/admin/flagged?limit=50' 
+                : '/api/questions?category=all&limit=50';
+            
+            const res = await authFetch(url);
             const data = await res.json();
             if (res.ok) {
                 setQuestions(data.questions);
@@ -25,7 +39,7 @@ export default function ModerationPage() {
         } catch (e) { } finally {
             setLoading(false);
         }
-    }, [authFetch]);
+    }, [authFetch, filter]);
 
     useEffect(() => {
         fetchQuestions();
@@ -51,14 +65,35 @@ export default function ModerationPage() {
         }
     };
 
+    const handleBlockUser = async (userId, questionId) => {
+        if (!confirm('Are you sure you want to suspend this student?')) return;
+        try {
+            // We use the existing user PATCH endpoint
+            const res = await authFetch(`/api/admin/users/${userId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ isBlocked: true }),
+            });
+            if (res.ok) {
+                alert('User has been blocked.');
+                // Optionally delete the flagged question or approve it, let's just delete it to clear the queue
+                await handleAction(questionId, 'delete');
+            } else {
+                alert('Failed to block user.');
+            }
+        } catch (e) {
+            alert('Error blocking user.');
+        }
+    };
+
     // Filter Logic
     const filteredQuestions = questions.filter(q => {
+        if (filter === 'flagged') return true; // already fetched from api/admin/flagged
         if (filter === 'pending') return !q.answers || q.answers.length === 0;
         if (filter === 'answered') return q.answers && q.answers.length > 0;
         return true;
     });
 
-    const pendingCount = questions.filter(q => !q.answers || q.answers.length === 0).length;
+    const pendingCount = filter !== 'flagged' ? questions.filter(q => !q.answers || q.answers.length === 0).length : 0;
 
     const getTimeAgo = (dateStr) => {
         const diff = new Date() - new Date(dateStr);
@@ -97,6 +132,12 @@ export default function ModerationPage() {
                 >
                     Answered
                 </button>
+                <button 
+                    onClick={() => setFilter('flagged')}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: filter === 'flagged' ? '#fee2e2' : 'transparent', color: filter === 'flagged' ? '#dc2626' : '#6b7280', fontWeight: filter === 'flagged' ? 700 : 500, cursor: 'pointer', fontSize: '13px', transition: '0.2s' }}
+                >
+                    Flagged (AI)
+                </button>
             </div>
 
             {loading ? (
@@ -128,7 +169,9 @@ export default function ModerationPage() {
                                         </div>
                                     </div>
                                     <div>
-                                        {isAnswered ? (
+                                        {q.isFlagged ? (
+                                            <div style={{ padding: '4px 12px', background: '#fee2e2', color: '#991b1b', borderRadius: '20px', fontSize: '11px', fontWeight: 800, letterSpacing: '0.05em', border: '1px solid #fecaca' }}>FLAGGED</div>
+                                        ) : isAnswered ? (
                                             <div style={{ padding: '4px 12px', background: '#dcfce7', color: '#166534', borderRadius: '20px', fontSize: '11px', fontWeight: 800, letterSpacing: '0.05em', border: '1px solid #bbf7d0' }}>ANSWERED</div>
                                         ) : (
                                             <div style={{ padding: '4px 12px', background: '#fef3c7', color: '#92400e', borderRadius: '20px', fontSize: '11px', fontWeight: 800, letterSpacing: '0.05em', border: '1px solid #fde68a' }}>PENDING</div>
@@ -136,8 +179,19 @@ export default function ModerationPage() {
                                     </div>
                                 </div>
 
+                                {/* AI Moderation Meta Data */}
+                                {q.isFlagged && (
+                                    <div style={{ background: '#fef2f2', padding: '12px 24px', borderTop: '1px solid #fee2e2', borderBottom: '1px solid #fee2e2', display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '12px', fontWeight: 800, color: '#dc2626' }}>AI ANALYSIS:</span>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <UvBadge status="error">Spam Score: {(q.spamScore * 100).toFixed(0)}%</UvBadge>
+                                            <UvBadge status="pending">{q.aiReason || 'Flagged by automated system'}</UvBadge>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Card Body */}
-                                <div style={{ padding: '0 24px 24px' }}>
+                                <div style={{ padding: '24px 24px' }}>
                                     <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#1f2937', margin: 0 }}>{q.questionText}</p>
                                 </div>
 
@@ -179,13 +233,39 @@ export default function ModerationPage() {
                                         </div>
                                     ) : (
                                         <>
-                                            <button 
-                                                style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#ffffff', color: '#4b5563', fontWeight: 700, cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                                                onClick={() => setReplyId(q._id)}
-                                            >
-                                                ↩ {isAnswered ? 'Edit Reply' : 'Reply'}
-                                            </button>
-                                            {!q.isApproved && (
+                                            {!q.isFlagged && (
+                                                <button 
+                                                    style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#ffffff', color: '#4b5563', fontWeight: 700, cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                                    onClick={() => setReplyId(q._id)}
+                                                >
+                                                    ↩ {isAnswered ? 'Edit Reply' : 'Reply'}
+                                                </button>
+                                            )}
+                                            
+                                            {q.isFlagged && (
+                                                <>
+                                                    <button 
+                                                        style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#22c55e', color: 'white', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
+                                                        onClick={() => handleAction(q._id, 'patch', { isApproved: true, isFlagged: false })}
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button 
+                                                        style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #fecaca', background: '#fee2e2', color: '#dc2626', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
+                                                        onClick={() => handleAction(q._id, 'delete')}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                    <button 
+                                                        style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#111827', color: 'white', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
+                                                        onClick={() => handleBlockUser(q.studentId._id, q._id)}
+                                                    >
+                                                        Block User
+                                                    </button>
+                                                </>
+                                            )}
+                                            
+                                            {!q.isApproved && !q.isFlagged && (
                                                 <button 
                                                     style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#ea580c', color: 'white', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
                                                     onClick={() => handleAction(q._id, 'patch', { isApproved: true, isFlagged: false })}
