@@ -165,7 +165,7 @@ export async function POST(request) {
         console.error('CRITICAL ERROR in /api/confessions POST:', error);
         return NextResponse.json({ 
             error: 'Internal server error',
-            details: error.message 
+            details: process.env.NODE_ENV === 'production' ? undefined : error.message 
         }, { status: 500 });
     }
 }

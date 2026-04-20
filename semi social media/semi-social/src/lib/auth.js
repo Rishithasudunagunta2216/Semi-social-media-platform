@@ -1,6 +1,11 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'semi-social-super-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    if (typeof window === 'undefined') {
+        console.warn('WARNING: JWT_SECRET is not defined in environment variables.');
+    }
+}
 const JWT_EXPIRES_IN = '7d';
 
 export function signToken(payload) {
