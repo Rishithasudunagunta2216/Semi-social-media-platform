@@ -14,7 +14,7 @@
     "cookie": "^1.1.1",
     "date-fns": "^4.1.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.2.2",
+    "mongoose": "^9.5.0",
     "multer": "^2.0.2",
     "next": "16.1.6",
     "next-connect": "^1.0.0",

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: semi-social-platform
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NEXT_PUBLIC_APP_NAME
+        value: CampusConnect
+      - key: NEXT_PUBLIC_UNIVERSITY_NAME
+        value: University
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: ADMIN_JWT_SECRET
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
