@@ -80,9 +80,16 @@ export async function POST(request) {
 
         return response;
     } catch (error) {
-        console.error('Registration error:', error);
+        console.error('CRITICAL: Registration API Failure');
+        console.error('Error Name:', error.name);
+        console.error('Error Message:', error.message);
+        console.error('Error Stack:', error.stack);
+        
         return NextResponse.json(
-            { error: 'Internal server error' },
+            { 
+                error: 'Internal server error', 
+                debug: process.env.NODE_ENV === 'development' ? error.message : undefined 
+            },
             { status: 500 }
         );
     }

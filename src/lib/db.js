@@ -31,11 +31,13 @@ async function dbConnect() {
 
     cached.promise = mongoose.connect(MONGODB_URI, opts)
       .then((mongoose) => {
-        console.log('MongoDB Atlas connected');
+        console.log('SUCCESS: MongoDB Atlas connected to:', MONGODB_URI.split('@')[1]); // Log host only for safety
         return mongoose;
       })
       .catch((error) => {
-        console.error('MongoDB Atlas connection error:', error.message);
+        console.error('ERROR: MongoDB Atlas connection failed!');
+        console.error('Reason:', error.message);
+        console.error('Full Error:', error);
         throw error;
       });
   }
